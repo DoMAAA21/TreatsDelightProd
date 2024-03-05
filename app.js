@@ -16,11 +16,19 @@ const maintenance = require("./routes/maintenance");
 const cors = require('cors');
 const app = express();
 
-app.use(cors({
-  origin: 'https://treatsdelight.vercel.app', 
-  // origin: ['http://localhost:3000','http://localhost:3001','https://treatsdelight.vercel.app','https://octopus-app-bwpel.ondigitalocean.app'], 
-  credentials: true,
-}));
+// app.use(cors({
+//   origin: 'https://treatsdelight.vercel.app', 
+//   // origin: ['http://localhost:3000','http://localhost:3001','https://treatsdelight.vercel.app','https://octopus-app-bwpel.ondigitalocean.app'], 
+//   credentials: true,
+// }));
+
+const corsConfig = {
+  origin: true,
+  credetials: true,
+}
+
+app.use(cors(corsConfig));
+app.options('*', cors(corsConfig));
 
 app.use(express.json());
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
