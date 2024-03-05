@@ -9,7 +9,7 @@ const ErrorHandler = require("../utils/errorHandler");
 exports.isAuthenticatedUser = async (req, res, next) => {
   let token;
 
-  console.log(req.headers.headers);
+  console.log(req.headers.token);
   console.log(req.headers.authorization);
 
   if (req.headers.authorization) {
@@ -31,8 +31,10 @@ exports.isAuthenticatedUser = async (req, res, next) => {
 
 exports.authorizeRoles = (...roles) => {
 
+ 
 
   return (req, res, next) => {
+    console.log(req.user);
     if (!roles.includes(req.user.role)) {
       return next(
         new ErrorHandler(

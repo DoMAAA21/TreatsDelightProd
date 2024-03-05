@@ -25,7 +25,7 @@ const {
 
 router
   .route("/admin/stores")
-  .get(isAuthenticatedUser, authorizeRoles('Admin', 'Employee'), allStores);
+  .get(authorizeRoles('Admin', 'Employee'), allStores);
 router
   .route("/admin/stores/archived")
   .get(isAuthenticatedUser, authorizeRoles('Admin', 'Employee'), archivedStores);
