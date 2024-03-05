@@ -23,7 +23,7 @@ const app = express();
 // }));
 
 const corsConfig = {
-  origin: true,
+  origin: 'https://treatsdelight.vercel.app',
   credetials: true,
 }
 
