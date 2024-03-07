@@ -103,11 +103,15 @@ exports.updateOrder = async (req, res, next) => {
         if(!orderItem.status){
             orderItem.status = 'Pending';
         }
-        else if (orderItem.status === 'Pending') {
+        else if (orderItem.status.toLowerCase() === 'pending') {
             orderItem.status = 'Paid';
-        } else if (orderItem.status === 'Paid') {
+        } else if (orderItem.status.toLowerCase() === 'paid') {
             orderItem.status = 'Completed';
-        } 
+        } else if(orderItem.status.toLowerCase() === 'completed'){
+            orderItem.status = 'Incomplete'
+        } else if (orderItem.status.toLowerCase() === 'incomplete'){
+            orderItem.status = 'Pending'
+        }
 
 
         await order.save();
