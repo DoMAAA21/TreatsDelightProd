@@ -1,4 +1,9 @@
 const Order = require('../models/Order');
+const mongoose = require("mongoose");
+const uuid = require('uuid');
+const { ObjectId } = mongoose.Types;
+
+
 exports.newOrder = async (req, res, next) => {
     const {
         orderItems,
@@ -7,30 +12,123 @@ exports.newOrder = async (req, res, next) => {
         isReserve
     } = req.body;
 
-    console.log(isReserve);
-    const order = await Order.create({
-        orderItems,
-        totalPrice,
-        paidAt: Date.now(),
-        user:{
-            id : user.id,
-            name : user.name
+    const newOrderItems = orderItems.map(item => ({
+        ...item,
+        id: uuid.v4() 
+    }));
+
+    try {
+        const order = await Order.create({
+            orderItems: newOrderItems, 
+            totalPrice,
+            paidAt: Date.now(),
+            user: {
+                id: user.id,
+                name: user.name
+            }
+        });
+
+        let qrCodeURL;
+        if (isReserve) {
+            qrCodeURL = order._id.toString();
+        } else {
+            qrCodeURL = null;
         }
-    })
-    let qrCodeURL;
-    if(isReserve){
-        qrCodeURL = order._id.toString();
-    }else{
-        qrCodeURL = null;
+        res.status(200).json({
+            success: true,
+            qrCodeURL,
+            order
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        });
     }
-    res.status(200).json({
+};
 
-        success: true,
-        qrCodeURL,
-        order
 
-    })
-}
+exports.orderTransaction = async (req, res, next) => {
+    const { id } = req.params;
+    const storeId = new ObjectId(id);
+    try {
+        const transactions = await Order.aggregate([
+            {
+                $match: {
+                    'orderItems.storeId': storeId
+                }
+            },
+            {
+                $unwind: '$orderItems'
+            },
+            {
+                $match: {
+                    'orderItems.storeId': storeId
+                }
+            },
+            {
+                $sort: {
+                    createdAt: -1 // Sort by createdAt field in descending order (latest first)
+                }
+            }
+        ]);
+        res.status(200).json({
+            success: true,
+            transactions
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        });
+    }
+};
+
+exports.updateOrder = async (req, res, next) => {
+    const { id } = req.body; 
+    try {
+        const order = await Order.findOne({ 'orderItems.id': id });
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+        
+        const orderItemIndex = order.orderItems.findIndex(item => item.id === id);
+        if (orderItemIndex === -1) {
+            return res.status(404).json({ success: false, message: 'Order item not found' });
+        }
+
+        const orderItem = order.orderItems[orderItemIndex];
+        if(!orderItem.status){
+            orderItem.status = 'Pending';
+        }
+        else if (orderItem.status.toLowerCase() === 'pending') {
+            orderItem.status = 'Paid';
+        } else if (orderItem.status.toLowerCase() === 'paid') {
+            orderItem.status = 'Completed';
+        } else if(orderItem.status.toLowerCase() === 'completed'){
+            orderItem.status = 'Incomplete'
+        } else if (orderItem.status.toLowerCase() === 'incomplete'){
+            orderItem.status = 'Pending'
+        }
+
+
+        await order.save();
+
+        res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+
+
+
+
+
+
 
 
 // exports.servicenewOrder = async (req, res, next) => {
@@ -120,21 +218,7 @@ exports.newOrder = async (req, res, next) => {
 
 // }
 
-// exports.myOrders = async (req, res, next) => {
 
-//     const orders = await Order.find({ user: req.user._id })
-
-// // console.log(req.user)
-
-//     res.status(200).json({
-
-//         success: true,
-
-//         orders
-
-//     })
-
-// }
 
 
 // exports.allOrders = async (req, res, next) => {

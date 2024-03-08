@@ -1,17 +1,8 @@
 const express = require('express')
 const router = express.Router();
 const { newOrder,
-    // getSingleOrder,
-    // myOrders,
-    // allOrders,
-    // updateOrder,
-    // deleteOrder,
-    // totalOrders,
-	// 	totalSales,
-	// 	customerSales,
-	// 	salesPerMonth,
-    // servicenewOrder
-
+    orderTransaction,
+    updateOrder
 } = require('../controllers/orderController')
 
 const { isAuthenticatedUser, authorizeRoles } = require('../middlewares/auth')
@@ -19,5 +10,7 @@ const { isAuthenticatedUser, authorizeRoles } = require('../middlewares/auth')
 
 
 router.route('/order/new').post(newOrder);
+router.route('/admin/store/:id/transactions').get(orderTransaction);
+router.route('/admin/transaction/update').patch(updateOrder);
 
 module.exports = router;
