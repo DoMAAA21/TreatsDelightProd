@@ -79,6 +79,7 @@ exports.deleteStore = async (req, res, next) => {
       return next(new ErrorHandler(`Store not found with id: ${req.params.id}`));
     }
     await User.deleteMany({ 'store.storeId': store._id });
+    await Product.deleteMany({ 'store.storeId': store._id });
 
     // Soft delete the store
     store.deletedAt = new Date();

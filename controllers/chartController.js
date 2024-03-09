@@ -438,6 +438,71 @@ exports.storeSalesCurrentDay = async (req, res, next) => {
 
 
 
+exports.allProductsSold = async (req, res, next) => {
+  try {
+    const totalProductsSold = await Order.aggregate([
+      {
+        $unwind: '$orderItems',
+      },
+      {
+        $group: {
+          _id: null,
+          totalProductsSold: { $sum: '$orderItems.quantity' }, // Count the total quantity of all order items
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalProductsSold: 1,
+        },
+      },
+    ]);
+
+    // Extracting the totalProductsSold value
+    const total = totalProductsSold[0]?.totalProductsSold || 0; // Defaulting to 0 if totalProductsSold is not available
+
+    res.json(total); // Return the total directly
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.totalSalesValue = async (req, res, next) => {
+  try {
+    const totalSalesValue = await Order.aggregate([
+      {
+        $unwind: '$orderItems',
+      },
+      {
+        $group: {
+          _id: null,
+          totalSalesValue: { 
+            $sum: { $multiply: ['$orderItems.quantity', '$orderItems.price'] } 
+          }, 
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalSalesValue: 1,
+        },
+      },
+    ]);
+
+    const total = totalSalesValue[0]?.totalSalesValue || 0; 
+
+    res.json(total); 
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
+
+
+
 
 
 
