@@ -47,12 +47,12 @@ const orderSchema = mongoose.Schema({
     user: {
         id: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true,
+            required: false,
             ref: 'User',
         },
         name: {
             type: String,
-            required: true,
+            required: false,
         },
     },
     orderItems: [orderItemSchema],

@@ -48,6 +48,37 @@ exports.newOrder = async (req, res, next) => {
     }
 };
 
+exports.newInventoryOrder = async (req, res, next) => {
+    const {
+        orderItems,
+        totalPrice,
+    } = req.body;
+
+    const newOrderItems = orderItems.map(item => ({
+        ...item,
+        status: 'Completed',
+        id: uuid.v4() 
+    }));
+
+    try {
+        const order = await Order.create({
+            orderItems: newOrderItems, 
+            totalPrice,
+            paidAt: Date.now(),
+        });
+        res.status(200).json({
+            success: true,
+            order
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        });
+    }
+};
+
 
 exports.orderTransaction = async (req, res, next) => {
     const { id } = req.params;
