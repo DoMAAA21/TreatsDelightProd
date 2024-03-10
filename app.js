@@ -16,6 +16,8 @@ const maintenance = require("./routes/maintenance");
 const cors = require('cors');
 const app = express();
 
+
+
 app.use(cors({
   // origin: 'https://treatsdelight.vercel.app', 
   origin: ['http://localhost:3000','http://localhost:3001','https://treatsdelight.vercel.app','https://octopus-app-bwpel.ondigitalocean.app'], 
@@ -38,5 +40,8 @@ app.use("/api/v1", electricity);
 app.use("/api/v1", maintenance);
 
 app.use(errorMiddleware);
+
+
+
 
 module.exports = app;
