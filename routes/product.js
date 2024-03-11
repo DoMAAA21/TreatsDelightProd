@@ -28,10 +28,11 @@ router.get("/admin/store/:id/products",isAuthenticatedUser,authorizeRoles('Owner
 router.get("/admin/store/:id/meals",isAuthenticatedUser,authorizeRoles('Owner', 'Employee'),allMeals);
 router.get("/admin/store/:id/all-store-items",isAuthenticatedUser,authorizeRoles('Owner', 'Employee'),allStoreItems);
 router.get("/allItems",allItems);
+router.get("/doctor/all-items",isAuthenticatedUser,authorizeRoles('Admin', 'Doctor'),allItems);
 router.get("/allItemsWeb",allItemsWeb);
 
 router.route('/admin/product/:id')
-.get(isAuthenticatedUser,authorizeRoles('Owner', 'Employee'),getProductDetails)
+.get(isAuthenticatedUser,authorizeRoles('Owner', 'Employee','Doctor'),getProductDetails)
 .put(upload.fields([
   { name: 'firstImage', maxCount: 1 }, 
   { name: 'secondImage', maxCount: 1 }, 

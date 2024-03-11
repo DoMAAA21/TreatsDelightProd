@@ -45,7 +45,6 @@ exports.allStoreItems = async (req, res, next) => {
 
 
 exports.allItems = async (req, res, next) => {
-  const storeId = req.params.id;
   const products = await Product.find();
 
   res.status(200).json({
