@@ -14,12 +14,36 @@ exports.newOrder = async (req, res, next) => {
         isReserve
     } = req.body;
 
-    const newOrderItems = orderItems.map(item => ({
-        ...item,
-        id: uuid.v4() 
-    }));
+  
 
     try {
+
+        for (const item of orderItems) {
+            const product = await Product.findById(item._id);
+
+            if (!product) {
+                return res.status(404).json({
+                    success: false,
+                    message: `Product not found`,
+                });
+            }
+            if (!product.portion) {
+                if (item.quantity > product.stock) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Insufficient stock for product: ' + product.name,
+                    });
+                }
+                product.stock -= item.quantity;
+                await product.save();
+            }
+        }
+
+        const newOrderItems = orderItems.map(item => ({
+            ...item,
+            id: uuid.v4() 
+        }));
+
         const order = await Order.create({
             orderItems: newOrderItems, 
             totalPrice,

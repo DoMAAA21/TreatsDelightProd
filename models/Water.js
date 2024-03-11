@@ -52,6 +52,14 @@ const waterSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    startAt: {
+        type: Date,
+        default: Date.now
+    },
+    endAt: {
+        type: Date,
+        default: Date.now
+    },
     deletedAt: {
         type: Date,
         default: null
