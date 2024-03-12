@@ -496,5 +496,12 @@ exports.updateStocks = async (req, res, next) => {
   }
 };
 
+exports.getAIKey = async (req, res, next) => {
+
+  const openAiKey = process.env.OPEN_AI_KEY;
+  res.json({ openAiKey});
+}
+
+
 
 
