@@ -133,6 +133,7 @@ exports.electricityBillPerMonth = async (req, res, next) => {
       {
         $match: {
           storeId: storeId,
+          type: "paid",
           deletedAt: null
         }
       },
@@ -177,6 +178,7 @@ exports.waterBillPerMonth = async (req, res, next) => {
       {
         $match: {
           storeId: storeId,
+          type: "paid",
           deletedAt: null
         }
       },
@@ -220,6 +222,8 @@ exports.rentBillPerMonth = async (req, res, next) => {
       {
         $match: {
           storeId: storeId,
+          type: "paid",
+
           deletedAt: null
         }
       },

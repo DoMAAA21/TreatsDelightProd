@@ -31,7 +31,6 @@ const waterSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please enter type"],
         default: "topay",
-
     },
     paymentType: {
         type: String,

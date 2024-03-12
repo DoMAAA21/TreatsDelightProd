@@ -13,9 +13,6 @@ exports.newOrder = async (req, res, next) => {
         user,
         isReserve
     } = req.body;
-
-  
-
     try {
 
         for (const item of orderItems) {
@@ -41,8 +38,10 @@ exports.newOrder = async (req, res, next) => {
 
         const newOrderItems = orderItems.map(item => ({
             ...item,
-            id: uuid.v4() 
+            id: uuid.v4(),
+            status: 'Paid',
         }));
+
 
         const order = await Order.create({
             orderItems: newOrderItems, 
@@ -53,6 +52,8 @@ exports.newOrder = async (req, res, next) => {
                 name: user.name
             }
         });
+
+     
 
         let qrCodeURL;
         if (isReserve) {
