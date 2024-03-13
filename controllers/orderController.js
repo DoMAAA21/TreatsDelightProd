@@ -204,4 +204,42 @@ exports.updateOrder = async (req, res, next) => {
 };
 
 
+exports.myOrder = async (req, res, next) => {
+    const { id } = req.params;
+    const userId = new ObjectId(id);
+    try {
+        const orders = await Order.aggregate([
+            {
+                $match: {
+                    'user.id': userId
+                }
+            },
+            {
+                $unwind: '$orderItems'
+            },
+            {
+                $match: {
+                    'user.id': userId
+                }
+            },
+            {
+                $sort: {
+                    createdAt: -1 // Sort by createdAt field in descending order (latest first)
+                }
+            }
+        ]);
+        res.status(200).json({
+            success: true,
+            orders
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        });
+    }
+};
+
+
 
