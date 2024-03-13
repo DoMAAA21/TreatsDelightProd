@@ -242,4 +242,38 @@ exports.myOrder = async (req, res, next) => {
 };
 
 
+exports.scanUpdateOrder = async (req, res, next) => {
+    const { id, storeId } = req.body; 
+    const formattedStoreId = new ObjectId(storeId);
+
+    try {
+        const order = await Order.findById(id);
+
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (order.isScanned) {
+            return res.status(400).json({ success: false, message: 'Order has already been scanned' });
+        }
+
+        order.orderItems.forEach(orderItem => {
+            if (orderItem.storeId.equals(formattedStoreId)) {
+                orderItem.status = 'Completed';
+            }
+        });
+
+        order.isScanned = true;
+        await order.save();
+        res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+
+
+
 

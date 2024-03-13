@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+
+
+
 const orderItemSchema = mongoose.Schema({
     id:{
         type: String,
@@ -77,6 +80,11 @@ const orderSchema = mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    isScanned:{
+        type: Boolean,
+        default: false,
+        required: false
     }
 });
 
