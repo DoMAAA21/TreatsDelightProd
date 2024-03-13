@@ -3,7 +3,7 @@ const User = require("../models/User");
 const ErrorHandler = require("../utils/errorHandler");
 const cloudinary = require("cloudinary");
 const jwt = require('jsonwebtoken');
-
+const axios = require('axios');
 exports.allProducts = async (req, res, next) => {
   const storeId = req.params.id;
   const products = await Product.find({
@@ -500,6 +500,37 @@ exports.getAIKey = async (req, res, next) => {
 
   const openAiKey = process.env.OPEN_AI_KEY;
   res.json({ openAiKey});
+}
+
+exports.fetchNutrition = async (req, res, next) => {
+  try {
+    const { itemName, measurement } = req.body;
+    
+    const result = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo-1106',
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant. Please provide only raw data dont provide measurements like kcal, grams etc' },
+          {
+            role: 'user',
+            content: `Can u give me the nutritional facts (calories, protein, carbs, fat, fiber, sugar, sodium) of ${itemName} per ${measurement} without the title, only (calories, protein, carbs, fat, fiber, sugar, sodium) in JSON Format with NO EXTRA INSTRUCTION/MESSAGE also don't provide measurements only raw data, if u cant find return message "error"`,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPEN_AI_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    res.json(result.data);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
 }
 
 

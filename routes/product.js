@@ -14,7 +14,8 @@ const {
  allStoreItems,
  updateStocks,
  allItemsWeb,
- getAIKey
+ getAIKey,
+ fetchNutrition
 } = require("../controllers/productController");
 
 const {
@@ -54,4 +55,5 @@ router.route('/admin/product/status/:id').put(updateProductStatus);
 router.route('/admin/product/update-stocks').patch(updateStocks);
 
 router.route('/admin/get-ai-key').get(getAIKey);
+router.route('/admin/product/fetch-nutrition').post(fetchNutrition);
 module.exports = router;
