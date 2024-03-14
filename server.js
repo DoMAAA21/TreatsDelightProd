@@ -1,4 +1,5 @@
-const app = require("./app");
+// const app = require("./app");
+const { server } = require("./socket");
 
 const connectDatabase = require("./config/database");
 
@@ -18,9 +19,29 @@ cloudinary.config({
 });
 
 
+// const http = require("http");
+// const socketIo = require("socket.io");
+// const server = http.createServer(app);
+// const io = socketIo(server);
 
-app.listen(process.env.PORT, () => {
-  console.log(
-    `Server started on port:' ${process.env.PORT} in ${process.env.NODE_ENV} mode`
-  );
-});
+
+
+
+// server.listen(3005, () => {
+//   console.log("Socket io is running on port 3005");
+// });
+
+
+
+
+
+// app.listen(process.env.PORT, () => {
+//   console.log(
+//     `Server started on port:' ${process.env.PORT} in ${process.env.NODE_ENV} mode`
+//   );
+// });
+
+server.listen(process.env.PORT, () => {
+  console.log(`Server started on port ${process.env.PORT}`);
+})
+
