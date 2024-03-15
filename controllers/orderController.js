@@ -290,10 +290,11 @@ exports.scanUpdateOrder = async (req, res, next) => {
     const order = await Order.findById(id);
     
 
+    console.log("testing")
     global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
+    console.log("asdasd");
 
-
-    global.io.emit(`notification`, { type: 'success', message: `Order completed` });
+    
 
 
  
