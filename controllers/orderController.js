@@ -374,7 +374,7 @@ exports.scanUpdateOrder = async (req, res, next) => {
     // emitWithRetry(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
 
-    const responses = await io.timeout(10000).emitWithAck(`notification/${order.user.id}`);
+    const responses = await global.io.timeout(5000).emitWithAck(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
     console.log(responses);
     // socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
