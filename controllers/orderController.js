@@ -3,7 +3,6 @@ const Product = require('../models/Product');
 const Notification = require('../models/Notification');
 const mongoose = require("mongoose");
 const uuid = require('uuid');
-const { response } = require('../app');
 const { ObjectId } = mongoose.Types;
 
   
@@ -307,59 +306,59 @@ exports.myOrder = async (req, res, next) => {
 //   }
   
 
-class SocketIOQueue {
-    constructor() {
-      this.queue = [];
-      this.isSending = false;
-    }
+// class SocketIOQueue {
+//     constructor() {
+//       this.queue = [];
+//       this.isSending = false;
+//     }
   
-    enqueue(event, data) {
-      this.queue.push({ event, data });
-      if (!this.isSending) {
-        this.processQueue();
-      }
-    }
+//     enqueue(event, data) {
+//       this.queue.push({ event, data });
+//       if (!this.isSending) {
+//         this.processQueue();
+//       }
+//     }
   
-    async processQueue() {
-      this.isSending = true;
-      while (this.queue.length > 0) {
-        const { event, data } = this.queue.shift();
-        try {
-          await this.emitWithRetry(event, data);
-        } catch (error) {
-          console.error(`Error emitting event "${event}":`, error);
-        }
-      }
-      this.isSending = false;
-    }
+//     async processQueue() {
+//       this.isSending = true;
+//       while (this.queue.length > 0) {
+//         const { event, data } = this.queue.shift();
+//         try {
+//           await this.emitWithRetry(event, data);
+//         } catch (error) {
+//           console.error(`Error emitting event "${event}":`, error);
+//         }
+//       }
+//       this.isSending = false;
+//     }
   
-    emitWithRetry(event, data, retryCount = 3, delay = 1000) {
-      return new Promise((resolve, reject) => {
-        const attemptEmit = (count) => {
-          console.log(`Attempt ${count}: Emitting event "${event}"`);
-          global.io.timeout(5000).emit(event, data, (error) => {
-            if (error) {
-              console.error(`Error emitting event "${event}":`, error);
-              if (count < retryCount) {
-                console.log(`Retry in ${delay / 1000} seconds...`);
-                setTimeout(() => attemptEmit(count + 1), delay);
-              } else {
-                console.error(`Maximum retry count reached for event "${event}"`);
-                reject(error);
-              }
-            } else {
-              console.log(`Event "${event}" emitted successfully`);
-              resolve();
-            }
-          });
-        };
+//     emitWithRetry(event, data, retryCount = 3, delay = 1000) {
+//       return new Promise((resolve, reject) => {
+//         const attemptEmit = (count) => {
+//           console.log(`Attempt ${count}: Emitting event "${event}"`);
+//           global.io.timeout(5000).emit(event, data, (error) => {
+//             if (error) {
+//               console.error(`Error emitting event "${event}":`, error);
+//               if (count < retryCount) {
+//                 console.log(`Retry in ${delay / 1000} seconds...`);
+//                 setTimeout(() => attemptEmit(count + 1), delay);
+//               } else {
+//                 console.error(`Maximum retry count reached for event "${event}"`);
+//                 reject(error);
+//               }
+//             } else {
+//               console.log(`Event "${event}" emitted successfully`);
+//               resolve();
+//             }
+//           });
+//         };
   
-        attemptEmit(1);
-      });
-    }
-  }
+//         attemptEmit(1);
+//       });
+//     }
+//   }
   
-  const socketIOQueue = new SocketIOQueue();
+//   const socketIOQueue = new SocketIOQueue();
 
 
   
@@ -370,51 +369,49 @@ exports.scanUpdateOrder = async (req, res, next) => {
     const order = await Order.findById(id);
     
 
-    // emitWithRetry(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+    
 
 
-    await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
-// 
-    // console.log(responses);
-//    await socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
-
+  
 
  
-    res.status(200).json({ success: true, message: 'Order item status updated successfully'});
-    // try {
-    //     const order = await Order.findById(id);
+    try {
+        const order = await Order.findById(id);
 
-    //     if (!order) {
-    //         return res.status(404).json({ success: false, message: 'Order not found' });
-    //     }
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
 
-    //     // const allCompleted = order.orderItems.every(orderItem => orderItem.status === 'Completed');
+        const allCompleted = order.orderItems.every(orderItem => orderItem.status === 'Completed');
         
-    //     // if (allCompleted) {
-    //     //     return res.status(400).json({ success: false, message: 'Order has already been scanned.' });
-    //     // }
+        if (allCompleted) {
+            
+            await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+            return res.status(400).json({ success: false, message: 'Order has already been scanned.' });
+        }
 
-    //     order.orderItems.forEach(orderItem => {
-    //         if (orderItem.storeId.equals(formattedStoreId)) {
-    //             orderItem.status = 'Completed';
+        order.orderItems.forEach(orderItem => {
+            if (orderItem.storeId.equals(formattedStoreId)) {
+                orderItem.status = 'Completed';
         
-    //             const notification = new Notification({
-    //                 message: `Your order item "${orderItem.name}" has been completed.`,
-    //                 recipient: order.user.id 
-    //             });
+                const notification = new Notification({
+                    message: `Your order item "${orderItem.name}" has been completed.`,
+                    recipient: order.user.id 
+                });
         
-    //             notification.save();
-    //         }
-    //     });
+                notification.save();
+            }
+        });
 
       
+        await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
-    //     await order.save();
-    //     res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
-    // } catch (error) {
-    //     console.error(error);
-    //     res.status(500).json({ success: false, message: 'Internal Server Error' });
-    // }
+        await order.save();
+        res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
 };
 
 
