@@ -366,14 +366,6 @@ exports.myOrder = async (req, res, next) => {
 exports.scanUpdateOrder = async (req, res, next) => {
     const { id, storeId } = req.body; 
     const formattedStoreId = new ObjectId(storeId);
-    const order = await Order.findById(id);
-    
-
-    
-
-
-  
-
  
     try {
         const order = await Order.findById(id);

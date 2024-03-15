@@ -5,14 +5,26 @@ const notificationSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  recipients: [{
+  recipient: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
-  }],
+    required: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  image: {
+    public_id: String,
+    url: String
+  },
+  webLink: {
+    type: String,
+    required: false,
+  },
+  mobileLink: {
+    type: String,
+    required: false,
   },
   read: {
     type: Boolean,
