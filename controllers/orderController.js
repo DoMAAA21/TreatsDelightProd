@@ -166,45 +166,45 @@ exports.orderTransaction = async (req, res, next) => {
     }
 };
 
-exports.updateOrder = async (req, res, next) => {
-    const { id } = req.body; 
-    try {
-        const order = await Order.findOne({ 'orderItems.id': id });
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
-        }
+// exports.updateOrder = async (req, res, next) => {
+//     const { id } = req.body; 
+//     try {
+//         const order = await Order.findOne({ 'orderItems.id': id });
+//         if (!order) {
+//             return res.status(404).json({ success: false, message: 'Order not found' });
+//         }
         
-        const orderItemIndex = order.orderItems.findIndex(item => item.id === id);
-        if (orderItemIndex === -1) {
-            return res.status(404).json({ success: false, message: 'Order item not found' });
-        }
+//         const orderItemIndex = order.orderItems.findIndex(item => item.id === id);
+//         if (orderItemIndex === -1) {
+//             return res.status(404).json({ success: false, message: 'Order item not found' });
+//         }
 
-        const orderItem = order.orderItems[orderItemIndex];
+//         const orderItem = order.orderItems[orderItemIndex];
 
-        if(!orderItem.status){
-            orderItem.status = 'Pending';
-        }
-        else if (orderItem.status.toLowerCase() === 'pending') {
-            orderItem.status = 'Paid';
-        } else if (orderItem.status.toLowerCase() === 'paid') {
-            global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
-            orderItem.status = 'Completed';
-        } else if(orderItem.status.toLowerCase() === 'completed'){
-            global.io.emit(`danger/${order.user.id}`, { type: 'danger', message: `Order marked incomplete` });
-            orderItem.status = 'Incomplete'
-        } else if (orderItem.status.toLowerCase() === 'incomplete'){
-            orderItem.status = 'Pending'
-        }
+//         if(!orderItem.status){
+//             orderItem.status = 'Pending';
+//         }
+//         else if (orderItem.status.toLowerCase() === 'pending') {
+//             orderItem.status = 'Paid';
+//         } else if (orderItem.status.toLowerCase() === 'paid') {
+//             global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
+//             orderItem.status = 'Completed';
+//         } else if(orderItem.status.toLowerCase() === 'completed'){
+//             global.io.emit(`danger/${order.user.id}`, { type: 'danger', message: `Order marked incomplete` });
+//             orderItem.status = 'Incomplete'
+//         } else if (orderItem.status.toLowerCase() === 'incomplete'){
+//             orderItem.status = 'Pending'
+//         }
 
 
-        await order.save();
+//         await order.save();
 
-        res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
-};
+//         res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ success: false, message: 'Internal Server Error' });
+//     }
+// };
 
 
 exports.myOrder = async (req, res, next) => {
