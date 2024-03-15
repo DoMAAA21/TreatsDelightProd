@@ -295,11 +295,11 @@ exports.scanUpdateOrder = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        const allCompleted = order.orderItems.every(orderItem => orderItem.status === 'Completed');
+        // const allCompleted = order.orderItems.every(orderItem => orderItem.status === 'Completed');
         
-        if (allCompleted) {
-            return res.status(400).json({ success: false, message: 'Order has already been scanned.' });
-        }
+        // if (allCompleted) {
+        //     return res.status(400).json({ success: false, message: 'Order has already been scanned.' });
+        // }
 
         order.orderItems.forEach(orderItem => {
             if (orderItem.storeId.equals(formattedStoreId)) {
