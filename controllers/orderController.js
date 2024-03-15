@@ -287,41 +287,42 @@ exports.myOrder = async (req, res, next) => {
 exports.scanUpdateOrder = async (req, res, next) => {
     const { id, storeId } = req.body; 
     const formattedStoreId = new ObjectId(storeId);
-    
-    try {
-        const order = await Order.findById(id);
+    global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
+    res.status(200).json({ success: true, message: 'Order item status updated successfully'});
+    // try {
+    //     const order = await Order.findById(id);
 
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
-        }
+    //     if (!order) {
+    //         return res.status(404).json({ success: false, message: 'Order not found' });
+    //     }
 
-        // const allCompleted = order.orderItems.every(orderItem => orderItem.status === 'Completed');
+    //     // const allCompleted = order.orderItems.every(orderItem => orderItem.status === 'Completed');
         
-        // if (allCompleted) {
-        //     return res.status(400).json({ success: false, message: 'Order has already been scanned.' });
-        // }
+    //     // if (allCompleted) {
+    //     //     return res.status(400).json({ success: false, message: 'Order has already been scanned.' });
+    //     // }
 
-        order.orderItems.forEach(orderItem => {
-            if (orderItem.storeId.equals(formattedStoreId)) {
-                orderItem.status = 'Completed';
+    //     order.orderItems.forEach(orderItem => {
+    //         if (orderItem.storeId.equals(formattedStoreId)) {
+    //             orderItem.status = 'Completed';
         
-                const notification = new Notification({
-                    message: `Your order item "${orderItem.name}" has been completed.`,
-                    recipient: order.user.id 
-                });
+    //             const notification = new Notification({
+    //                 message: `Your order item "${orderItem.name}" has been completed.`,
+    //                 recipient: order.user.id 
+    //             });
         
-                notification.save();
-            }
-        });
+    //             notification.save();
+    //         }
+    //     });
 
-        global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
+      
 
-        await order.save();
-        res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
+    //     await order.save();
+    //     res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
+    // } catch (error) {
+    //     console.error(error);
+    //     res.status(500).json({ success: false, message: 'Internal Server Error' });
+    // }
 };
 
 
