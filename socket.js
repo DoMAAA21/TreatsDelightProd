@@ -23,8 +23,6 @@ io.on("connection", (socket) => {
   });
 
   
-
-
   socket.on("new_user_login", (data) => {
     io.emit("new_user_login", { message: data.message });
   });

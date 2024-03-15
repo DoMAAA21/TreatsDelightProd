@@ -285,27 +285,81 @@ exports.myOrder = async (req, res, next) => {
 // };
 
 
-function emitWithRetry(event, data, retryCount = 3, delay = 1000) {
-    const attemptEmit = (count) => {
-      console.log(`Attempt ${count}: Emitting event "${event}"`);
-      global.io.emit(event, data, (error) => {
-        if (error) {
-          console.error(`Error emitting event "${event}":`, error);
-          if (count < retryCount) {
-            console.log(`Retry in ${delay / 1000} seconds...`);
-            setTimeout(() => attemptEmit(count + 1), delay);
-          } else {
-            console.error(`Maximum retry count reached for event "${event}"`);
-          }
-        } else {
-          console.log(`Event "${event}" emitted successfully`);
-        }
-      });
-    };
+// function emitWithRetry(event, data, retryCount = 3, delay = 1000) {
+//     const attemptEmit = (count) => {
+//       console.log(`Attempt ${count}: Emitting event "${event}"`);
+//       global.io.emit(event, data, (error) => {
+//         if (error) {
+//           console.error(`Error emitting event "${event}":`, error);
+//           if (count < retryCount) {
+//             console.log(`Retry in ${delay / 1000} seconds...`);
+//             setTimeout(() => attemptEmit(count + 1), delay);
+//           } else {
+//             console.error(`Maximum retry count reached for event "${event}"`);
+//           }
+//         } else {
+//           console.log(`Event "${event}" emitted successfully`);
+//         }
+//       });
+//     };
   
-    attemptEmit(1);
+//     attemptEmit(1);
+//   }
+  
+
+class SocketIOQueue {
+    constructor() {
+      this.queue = [];
+      this.isSending = false;
+    }
+  
+    enqueue(event, data) {
+      this.queue.push({ event, data });
+      if (!this.isSending) {
+        this.processQueue();
+      }
+    }
+  
+    async processQueue() {
+      this.isSending = true;
+      while (this.queue.length > 0) {
+        const { event, data } = this.queue.shift();
+        try {
+          await this.emitWithRetry(event, data);
+        } catch (error) {
+          console.error(`Error emitting event "${event}":`, error);
+        }
+      }
+      this.isSending = false;
+    }
+  
+    emitWithRetry(event, data, retryCount = 3, delay = 1000) {
+      return new Promise((resolve, reject) => {
+        const attemptEmit = (count) => {
+          console.log(`Attempt ${count}: Emitting event "${event}"`);
+          global.io.emit(event, data, (error) => {
+            if (error) {
+              console.error(`Error emitting event "${event}":`, error);
+              if (count < retryCount) {
+                console.log(`Retry in ${delay / 1000} seconds...`);
+                setTimeout(() => attemptEmit(count + 1), delay);
+              } else {
+                console.error(`Maximum retry count reached for event "${event}"`);
+                reject(error);
+              }
+            } else {
+              console.log(`Event "${event}" emitted successfully`);
+              resolve();
+            }
+          });
+        };
+  
+        attemptEmit(1);
+      });
+    }
   }
   
+  const socketIOQueue = new SocketIOQueue();
 
 
   
@@ -316,9 +370,9 @@ exports.scanUpdateOrder = async (req, res, next) => {
     const order = await Order.findById(id);
     
 
-    emitWithRetry(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+    // emitWithRetry(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
-    
+    socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
 
  
