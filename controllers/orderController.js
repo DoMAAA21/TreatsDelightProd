@@ -284,15 +284,39 @@ exports.myOrder = async (req, res, next) => {
 //     }
 // };
 
+
+function emitWithRetry(event, data, retryCount = 3, delay = 1000) {
+    const attemptEmit = (count) => {
+      console.log(`Attempt ${count}: Emitting event "${event}"`);
+      global.io.emit(event, data, (error) => {
+        if (error) {
+          console.error(`Error emitting event "${event}":`, error);
+          if (count < retryCount) {
+            console.log(`Retry in ${delay / 1000} seconds...`);
+            setTimeout(() => attemptEmit(count + 1), delay);
+          } else {
+            console.error(`Maximum retry count reached for event "${event}"`);
+          }
+        } else {
+          console.log(`Event "${event}" emitted successfully`);
+        }
+      });
+    };
+  
+    attemptEmit(1);
+  }
+  
+
+
+  
+
 exports.scanUpdateOrder = async (req, res, next) => {
     const { id, storeId } = req.body; 
     const formattedStoreId = new ObjectId(storeId);
     const order = await Order.findById(id);
     
 
-    console.log("testing")
-    global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
-    console.log("asdasd");
+    emitWithRetry(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
     
 
