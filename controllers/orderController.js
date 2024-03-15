@@ -3,6 +3,7 @@ const Product = require('../models/Product');
 const Notification = require('../models/Notification');
 const mongoose = require("mongoose");
 const uuid = require('uuid');
+const { response } = require('../app');
 // const { io } = require('../socket');
 const { ObjectId } = mongoose.Types;
 
@@ -372,7 +373,11 @@ exports.scanUpdateOrder = async (req, res, next) => {
 
     // emitWithRetry(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
-    socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+
+    const responses = await io.timeout(10000).emitWithAck(`notification/${order.user.id}`);
+
+    console.log(responses);
+    // socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
 
  
