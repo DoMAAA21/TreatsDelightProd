@@ -1,7 +1,9 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Notification = require('../models/Notification');
 const mongoose = require("mongoose");
 const uuid = require('uuid');
+// const { io } = require('../socket');
 const { ObjectId } = mongoose.Types;
 
   
@@ -185,9 +187,10 @@ exports.updateOrder = async (req, res, next) => {
         else if (orderItem.status.toLowerCase() === 'pending') {
             orderItem.status = 'Paid';
         } else if (orderItem.status.toLowerCase() === 'paid') {
-           
+            global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
             orderItem.status = 'Completed';
         } else if(orderItem.status.toLowerCase() === 'completed'){
+            global.io.emit(`danger/${order.user.id}`, { type: 'danger', message: `Order marked incomplete` });
             orderItem.status = 'Incomplete'
         } else if (orderItem.status.toLowerCase() === 'incomplete'){
             orderItem.status = 'Pending'
@@ -242,29 +245,77 @@ exports.myOrder = async (req, res, next) => {
 };
 
 
+
+// exports.scanUpdateOrder = async (req, res, next) => {
+//     const { id, storeId } = req.body; 
+//     const formattedStoreId = new ObjectId(storeId);
+
+//     try {
+//         const order = await Order.findById(id);
+
+
+//         if (!order) {
+//             return res.status(404).json({ success: false, message: 'Order not found' });
+//         }
+
+//         if (order.isScanned) {
+//             return res.status(400).json({ success: false, message: 'Order has already been scanned' });
+//         }
+
+//         order.orderItems.forEach(orderItem => {
+//             if (orderItem.storeId.equals(formattedStoreId)) {
+//                 orderItem.status = 'Completed';
+        
+//                 const notification = new Notification({
+//                     message: `Your order item "${orderItem.name}" has been completed.`,
+//                     recipient: order.user.id 
+//                 });
+        
+//                 notification.save();
+//             }
+//         });
+//         io.emit(`notification/${order.user.id}`, { type: 'success', message: 'Order updated successfully' });
+//         order.isScanned = true;
+//         await order.save();
+//         res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ success: false, message: 'Internal Server Error' });
+//     }
+// };
+
 exports.scanUpdateOrder = async (req, res, next) => {
     const { id, storeId } = req.body; 
     const formattedStoreId = new ObjectId(storeId);
-
+    
     try {
         const order = await Order.findById(id);
-
 
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        if (order.isScanned) {
-            return res.status(400).json({ success: false, message: 'Order has already been scanned' });
+        const allCompleted = order.orderItems.every(orderItem => orderItem.status === 'Completed');
+        
+        if (allCompleted) {
+            return res.status(400).json({ success: false, message: 'Order has already been scanned.' });
         }
 
         order.orderItems.forEach(orderItem => {
             if (orderItem.storeId.equals(formattedStoreId)) {
                 orderItem.status = 'Completed';
+        
+                const notification = new Notification({
+                    message: `Your order item "${orderItem.name}" has been completed.`,
+                    recipient: order.user.id 
+                });
+        
+                notification.save();
             }
         });
 
-        order.isScanned = true;
+        global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
+
         await order.save();
         res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
     } catch (error) {
@@ -272,7 +323,6 @@ exports.scanUpdateOrder = async (req, res, next) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
-
 
 
 

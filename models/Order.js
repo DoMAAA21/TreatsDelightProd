@@ -80,12 +80,7 @@ const orderSchema = mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    },
-    isScanned:{
-        type: Boolean,
-        default: false,
-        required: false
-    }
+    }, 
 });
 
 module.exports = mongoose.model('Order', orderSchema);
