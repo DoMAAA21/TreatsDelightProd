@@ -338,7 +338,7 @@ class SocketIOQueue {
       return new Promise((resolve, reject) => {
         const attemptEmit = (count) => {
           console.log(`Attempt ${count}: Emitting event "${event}"`);
-          global.io.emit(event, data, (error) => {
+          global.io.timeout(5000).emit(event, data, (error) => {
             if (error) {
               console.error(`Error emitting event "${event}":`, error);
               if (count < retryCount) {
@@ -374,10 +374,10 @@ exports.scanUpdateOrder = async (req, res, next) => {
     // emitWithRetry(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
 
-    const responses = await global.io.timeout(5000).emitWithAck(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
-
-    console.log(responses);
-    // socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+    // await global.io.timeout(5000).emitWithAck(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+// 
+    // console.log(responses);
+   await socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
 
  
