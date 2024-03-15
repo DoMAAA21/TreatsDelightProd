@@ -336,6 +336,7 @@ class SocketIOQueue {
   
     emitWithRetry(event, data, retryCount = 3, delay = 1000) {
       return new Promise((resolve, reject) => {
+        let success = false; // Track if the emission was successful
         const attemptEmit = (count) => {
           console.log(`Attempt ${count}: Emitting event "${event}"`);
           global.io.timeout(5000).emit(event, data, (error) => {
@@ -350,15 +351,25 @@ class SocketIOQueue {
               }
             } else {
               console.log(`Event "${event}" emitted successfully`);
+              success = true;
               resolve();
             }
           });
         };
   
         attemptEmit(1);
+  
+        // Stop retrying if the emission was successful
+        setTimeout(() => {
+          if (!success) {
+            console.error(`Maximum timeout reached for event "${event}"`);
+            reject(new Error(`Timeout reached for event "${event}"`));
+          }
+        }, retryCount * delay + 1000); // Adjust timeout based on retry count and delay
       });
     }
   }
+  
   
   const socketIOQueue = new SocketIOQueue();
 
