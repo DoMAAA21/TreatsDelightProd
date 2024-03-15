@@ -4,7 +4,6 @@ const Notification = require('../models/Notification');
 const mongoose = require("mongoose");
 const uuid = require('uuid');
 const { response } = require('../app');
-// const { io } = require('../socket');
 const { ObjectId } = mongoose.Types;
 
   
@@ -374,10 +373,10 @@ exports.scanUpdateOrder = async (req, res, next) => {
     // emitWithRetry(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
 
-    // await global.io.timeout(5000).emitWithAck(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+    await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 // 
     // console.log(responses);
-   await socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+//    await socketIOQueue.enqueue(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
 
 
  
