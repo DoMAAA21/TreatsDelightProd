@@ -291,7 +291,7 @@ exports.scanUpdateOrder = async (req, res, next) => {
     
 
     console.log("testing")
-    global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
+    // global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
     console.log("asdasd");
 
     
