@@ -1,11 +1,16 @@
-const socketIo = require('socket.io');
+// const socketIo = require('socket.io');
 const http = require('http');
 const app = require('./app');
 
+
+
 const server = http.createServer(app);
-const io = socketIo(server,{
+
+const { Server } = require('socket.io');
+const io = new Server(server,{
   cors: {
     origin: 'https://treatsdelight.vercel.app', 
+    methods: ["GET", "POST"]
   }
 });
 
