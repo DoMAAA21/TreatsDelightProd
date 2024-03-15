@@ -288,7 +288,13 @@ exports.scanUpdateOrder = async (req, res, next) => {
     const { id, storeId } = req.body; 
     const formattedStoreId = new ObjectId(storeId);
     const order = await Order.findById(id);
+    
+// global.io.on("connection", (socket) => {
+
     global.io.emit(`notification/${order.user.id}`, { type: 'success', message: `Order completed` });
+// });
+
+ 
     res.status(200).json({ success: true, message: 'Order item status updated successfully'});
     // try {
     //     const order = await Order.findById(id);

@@ -5,7 +5,7 @@ const app = require('./app');
 const server = http.createServer(app);
 const io = socketIo(server,{
   cors: {
-    origin: ['http://localhost:3000','http://localhost:3001','https://treatsdelight.vercel.app','https://octopus-app-bwpel.ondigitalocean.app'], 
+    origin: 'https://treatsdelight.vercel.app', 
   }
 });
 
