@@ -390,7 +390,7 @@ exports.scanUpdateOrder = async (req, res, next) => {
                     message: `Your order item "${orderItem.name}" has been completed.`,
                     recipient: order.user.id,
                     image: orderItem.image,
-                    webLink: "/me/myorders",
+                    webLink: "/me/my-orders",
                 });
                 notification.save();
             }
