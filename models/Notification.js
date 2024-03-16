@@ -15,8 +15,8 @@ const notificationSchema = new mongoose.Schema({
     default: Date.now
   },
   image: {
-    public_id: String,
-    url: String
+    type: String,
+    required: true
   },
   webLink: {
     type: String,

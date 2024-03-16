@@ -388,9 +388,10 @@ exports.scanUpdateOrder = async (req, res, next) => {
         
                 const notification = new Notification({
                     message: `Your order item "${orderItem.name}" has been completed.`,
-                    recipient: order.user.id 
+                    recipient: order.user.id,
+                    image: orderItem.image,
+                    webLink: "/me/myorders",
                 });
-        
                 notification.save();
             }
         });

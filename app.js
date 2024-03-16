@@ -11,7 +11,7 @@ const rent = require("./routes/rent");
 const water = require("./routes/water");
 const electricity = require("./routes/electricity");
 const maintenance = require("./routes/maintenance");
-
+const notification = require("./routes/notification");
 
 const cors = require('cors');
 const app = express();
@@ -38,6 +38,7 @@ app.use("/api/v1", rent);
 app.use("/api/v1", water);
 app.use("/api/v1", electricity);
 app.use("/api/v1", maintenance);
+app.use("/api/v1", notification);
 
 app.use(errorMiddleware);
 
