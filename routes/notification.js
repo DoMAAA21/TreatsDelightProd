@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 
 const {
- allNotifications
+ allNotifications,
+ readNotification,
+ allUnreadNotifications
 } = require("../controllers/notificationController");
 
 const {
@@ -14,5 +16,13 @@ const {
 router
   .route("/notification/user/:id")
   .get(isAuthenticatedUser, allNotifications);
+
+  router
+  .route("/notification/user/:id/unread")
+  .get(isAuthenticatedUser, allUnreadNotifications);
+
+router
+  .route("/notification/read")
+  .put(isAuthenticatedUser, readNotification);
 
 module.exports = router;
