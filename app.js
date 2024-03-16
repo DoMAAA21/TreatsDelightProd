@@ -20,7 +20,7 @@ const app = express();
 
 app.use(cors({
   // origin: 'https://treatsdelight.vercel.app', 
-  origin: ['http://localhost:3000','http://localhost:3001','https://treatsdelight.vercel.app','https://octopus-app-bwpel.ondigitalocean.app'], 
+  origin: ['http://localhost:3000','www.treatsdelight.shop','https://www.treatsdelight.shop','https://treatsdelight.vercel.app'], 
   credentials: true,
 }));
 
