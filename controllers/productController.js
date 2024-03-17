@@ -45,50 +45,29 @@ exports.allStoreItems = async (req, res, next) => {
 
 
 exports.allItems = async (req, res, next) => {
-  const products = await Product.find();
+  const token = req.headers?.authorization;
+  let isMuslim = false;
+
+  if (token) {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id);
+    if (req.user.religion.toLowerCase() === "muslim") {
+      isMuslim = true;
+    }
+  }
+
+  let products;
+  if (isMuslim) {
+    products = await Product.find({ halal: true });
+  } else {
+    products = await Product.find();
+  }
 
   res.status(200).json({
     success: true,
-
     products,
   });
 };
-
-
-// exports.allItems = async (req, res, next) => {
-//   try {
-//     const token = req.headers?.authorization;
-//     let isMuslim = false;
-
-//     if (token) {
-//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//       req.user = await User.findById(decoded.id);
-//       if (req.user.religion.toLowerCase() === "muslim") {
-//         isMuslim = true;
-//       }
-//     }
-
-//     const query = { active: true };
-
-//     if (isMuslim) {
-//       query.halal = { $ne: false }; // Exclude products with halal: false
-//     }
-
-//     const allProducts = await Product.find(query);
-//     // const shuffledProducts = shuffleArray(allProducts);
-//     res.status(200).json({
-//       success: true,
-//       products: allProducts,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       error: 'Internal Server Error',
-//     });
-//   }
-// };
-
 
 
 
