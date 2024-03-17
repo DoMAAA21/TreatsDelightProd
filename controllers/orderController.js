@@ -192,7 +192,7 @@ exports.updateOrder = async (req, res, next) => {
         }
 
         if(status === "Incomplete"){
-            await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+            await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Incomplete Order' });
             const notification = new Notification({
                 message: `Incomplete order "${orderItem.name}".`,
                 recipient: order.user.id,
