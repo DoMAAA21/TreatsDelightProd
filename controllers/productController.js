@@ -514,7 +514,7 @@ exports.fetchNutrition = async (req, res, next) => {
           { role: 'system', content: 'You are a helpful assistant. Please provide only raw data dont provide measurements like kcal, grams etc' },
           {
             role: 'user',
-            content: `Can u give me the nutritional facts (calories, protein, carbs, fat, fiber, sugar, sodium) of ${itemName} per ${measurement} without the title, only (calories, protein, carbs, fat, fiber, sugar, sodium) in JSON Format with NO EXTRA INSTRUCTION/MESSAGE also don't provide measurements only raw data, if u cant find return message "error"`,
+            content: `Can u give me the nutritional facts (calories, protein, carbs, fat, fiber, sugar, sodium, cholesterol) of ${itemName} per ${measurement} without the title, only (calories, protein, carbs, fat, fiber, sugar, sodium, cholesterol) in JSON Format with NO EXTRA INSTRUCTION/MESSAGE also don't provide measurements only raw data, if u cant find return message "error"`,
           },
         ],
       },
