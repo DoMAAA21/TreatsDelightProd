@@ -23,8 +23,14 @@ const notificationSchema = new mongoose.Schema({
     required: false,
   },
   mobileLink: {
-    type: String,
-    required: false,
+    stack:{
+      type: String,
+      required: true,
+    },
+    screen:{
+      type: String,
+      required: true,
+    }
   },
   read: {
     type: Boolean,
