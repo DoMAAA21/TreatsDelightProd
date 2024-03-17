@@ -187,7 +187,7 @@ exports.updateOrder = async (req, res, next) => {
                 recipient: order.user.id,
                 image: orderItem.image,
                 webLink: "/me/my-orders",
-                mobileLink: `'Profile', { screen: 'MyOrder'}`
+                mobileLink: "'Profile', { screen: 'MyOrder'}"
             });
             notification.save();
         }
@@ -199,7 +199,7 @@ exports.updateOrder = async (req, res, next) => {
                 recipient: order.user.id,
                 image: orderItem.image,
                 webLink: "/me/my-orders",
-                mobileLink: `'Profile', { screen: 'MyOrder'}`
+                mobileLink: "'Profile', { screen: 'MyOrder'}"
             });
             notification.save();
         }
@@ -281,7 +281,7 @@ exports.scanUpdateOrder = async (req, res, next) => {
                     recipient: order.user.id,
                     image: orderItem.image,
                     webLink: "/me/my-orders",
-                    mobileLink: `'Profile', { screen: 'MyOrder'}`
+                    mobileLink: "'Profile', { screen: 'MyOrder'}"
                 });
                 notification.save();
             }
