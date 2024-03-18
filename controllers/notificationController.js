@@ -1,12 +1,4 @@
-
-
-
 const Notification = require("../models/Notification");
-const ErrorHandler = require("../utils/errorHandler");
-
-const bcrypt = require("bcryptjs");
-
-const cloudinary = require("cloudinary");
 
 
 
@@ -45,6 +37,7 @@ exports.allNotifications = async (req, res, next) => {
 
 exports.readNotification = async (req, res, next) => {
   const { id } = req.body;
+
   try {
     const notification = await Notification.findByIdAndUpdate(id, { read: true }, { new: true });
     if (!notification) {
