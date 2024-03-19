@@ -506,54 +506,45 @@ exports.totalSalesValue = async (req, res, next) => {
 
 
 
-async function getStoreSalesPerDay(id, startDate, endDate) {
-  try {
-    const storeId = new mongoose.Types.ObjectId(id);
-
-    // Find orders within the specified date range
-    const orders = await Order.find({
-      storeId,
-      createdAt: { $gte: startDate, $lte: endDate }
-    });
-
-    // Initialize an object to store sales per day
-    const salesPerDay = {};
-
-    // Iterate through each order and aggregate sales per day
-    orders.forEach(order => {
-      const dayOfWeek = order.createdAt.toLocaleDateString('en-US', { weekday: 'long' });
-      if (!salesPerDay[dayOfWeek]) {
-        salesPerDay[dayOfWeek] = 0;
-      }
-      salesPerDay[dayOfWeek] += order.totalPrice;
-    });
-
-    return salesPerDay;
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
-}
-
 exports.storeSalesPerDay = async (req, res, next) => {
+  const { id } = req.params; 
+  const storeId = new ObjectId(id);
   try {
-    const { id } = req.params;
-    
-    // Get start and end date for the current week (Monday to Sunday)
-    const currentDate = new Date();
-    const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay()); // Set to Monday of current week
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6); // Set to Sunday of current week
+    const weeklySales = await Order.aggregate([
+        {
+            $match: {
+                'orderItems.storeId': storeId, 
+                paidAt: { $exists: true }
+            }
+        },
+        {
+            $group: {
+                _id: { $dayOfWeek: "$paidAt" }, // Group by day of the week
+                totalSales: { $sum: "$totalPrice" }
+            }
+        },
+        {
+            $project: {
+                _id: 0, 
+                dayOfWeek: "$_id",
+                totalSales: 1
+            }
+        },
+        {
+            $sort: { dayOfWeek: 1 } // Sort by day of the week (Monday to Sunday)
+        }
+    ]);
 
-    // Retrieve sales per day for the current week
-    const salesPerDay = await getStoreSalesPerDay(id, startOfWeek, endOfWeek);
+    // Map day of the week index to day name
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    weeklySales.forEach(item => {
+        item.dayOfWeek = weekdays[item.dayOfWeek - 1];
+    });
 
-    res.status(200).json({ success: true, salesPerDay });
-  } catch (error) {
-    console.error('Error fetching store products sold:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
+    res.json({ success: true, sales: weeklySales });
+} catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+}
 };
 
 
