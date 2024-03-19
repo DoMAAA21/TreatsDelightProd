@@ -506,6 +506,62 @@ exports.totalSalesValue = async (req, res, next) => {
 
 
 
+async function getStoreSalesPerDay(id, startDate, endDate) {
+  try {
+    const storeId = new mongoose.Types.ObjectId(id);
+
+    // Find orders within the specified date range
+    const orders = await Order.find({
+      storeId,
+      createdAt: { $gte: startDate, $lte: endDate }
+    });
+
+    // Initialize an object to store sales per day
+    const salesPerDay = {};
+
+    // Iterate through each order and aggregate sales per day
+    orders.forEach(order => {
+      const dayOfWeek = order.createdAt.toLocaleDateString('en-US', { weekday: 'long' });
+      if (!salesPerDay[dayOfWeek]) {
+        salesPerDay[dayOfWeek] = 0;
+      }
+      salesPerDay[dayOfWeek] += order.totalPrice;
+    });
+
+    return salesPerDay;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+exports.storeSalesPerDay = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // Get start and end date for the current week (Monday to Sunday)
+    const currentDate = new Date();
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay()); // Set to Monday of current week
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // Set to Sunday of current week
+
+    // Retrieve sales per day for the current week
+    const salesPerDay = await getStoreSalesPerDay(id, startOfWeek, endOfWeek);
+
+    res.status(200).json({ success: true, salesPerDay });
+  } catch (error) {
+    console.error('Error fetching store products sold:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+
+
+
+
+
 
 
 
