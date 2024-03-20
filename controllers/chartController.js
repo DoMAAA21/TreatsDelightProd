@@ -321,16 +321,16 @@ exports.topStores = async (req, res, next) => {
   try {
     const topStores = await Order.aggregate([
       {
-        $unwind: '$orderItems', 
+        $unwind: '$orderItems',
       },
       {
         $group: {
-          _id: '$orderItems.storeId', 
+          _id: '$orderItems.storeId',
           totalProductsSold: { $sum: '$orderItems.quantity' },
         },
       },
       {
-        $lookup: { 
+        $lookup: {
           from: 'stores',
           localField: '_id',
           foreignField: '_id',
@@ -367,19 +367,19 @@ exports.topStores = async (req, res, next) => {
 
 exports.storeSalesCurrentMonth = async (req, res, next) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const storeId = new ObjectId(id);
     const startDate = new Date();
-    startDate.setDate(1); 
-    startDate.setHours(0, 0, 0, 0); 
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
 
     const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999); 
+    endDate.setHours(23, 59, 59, 999);
     const storeSalesCurrentMonth = await Order.aggregate([
       {
         $match: {
-          'orderItems.storeId': storeId, 
-          'createdAt': { $gte: startDate, $lte: endDate }, 
+          'orderItems.storeId': storeId,
+          'createdAt': { $gte: startDate, $lte: endDate },
           'store.deletedAt': null
         }
       },
@@ -403,9 +403,9 @@ exports.storeSalesCurrentMonth = async (req, res, next) => {
 
 exports.storeSalesCurrentDay = async (req, res, next) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const storeId = new ObjectId(id);
-    
+
     // Get the start and end of the current date
     const currentDate = new Date();
     const startDate = new Date(currentDate);
@@ -413,12 +413,12 @@ exports.storeSalesCurrentDay = async (req, res, next) => {
 
     const endDate = new Date(currentDate);
     endDate.setHours(23, 59, 59, 999); // Set time to end of the day
-    
+
     const storeSalesCurrentDate = await Order.aggregate([
       {
         $match: {
-          'orderItems.storeId': storeId, 
-          'createdAt': { $gte: startDate, $lte: endDate }, 
+          'orderItems.storeId': storeId,
+          'createdAt': { $gte: startDate, $lte: endDate },
           'store.deletedAt': null
         }
       },
@@ -481,9 +481,9 @@ exports.totalSalesValue = async (req, res, next) => {
       {
         $group: {
           _id: null,
-          totalSalesValue: { 
-            $sum: { $multiply: ['$orderItems.quantity', '$orderItems.price'] } 
-          }, 
+          totalSalesValue: {
+            $sum: { $multiply: ['$orderItems.quantity', '$orderItems.price'] }
+          },
         },
       },
       {
@@ -494,9 +494,9 @@ exports.totalSalesValue = async (req, res, next) => {
       },
     ]);
 
-    const total = totalSalesValue[0]?.totalSalesValue || 0; 
+    const total = totalSalesValue[0]?.totalSalesValue || 0;
 
-    res.json(total); 
+    res.json(total);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -507,45 +507,161 @@ exports.totalSalesValue = async (req, res, next) => {
 
 
 exports.storeSalesPerDay = async (req, res, next) => {
-  const { id } = req.params; 
+  const { id } = req.params;
   const storeId = new ObjectId(id);
   try {
     const weeklySales = await Order.aggregate([
-        {
-            $match: {
-                'orderItems.storeId': storeId, 
-                paidAt: { $exists: true }
-            }
-        },
-        {
-            $group: {
-                _id: { $dayOfWeek: "$paidAt" }, // Group by day of the week
-                totalSales: { $sum: "$totalPrice" }
-            }
-        },
-        {
-            $project: {
-                _id: 0, 
-                dayOfWeek: "$_id",
-                totalSales: 1
-            }
-        },
-        {
-            $sort: { dayOfWeek: 1 } // Sort by day of the week (Monday to Sunday)
+      {
+        $match: {
+          'orderItems.storeId': storeId,
+          paidAt: { $exists: true }
         }
+      },
+      {
+        $group: {
+          _id: { $dayOfWeek: "$paidAt" }, // Group by day of the week
+          totalSales: { $sum: "$totalPrice" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          dayOfWeek: "$_id",
+          totalSales: 1
+        }
+      },
+      {
+        $sort: { dayOfWeek: 1 } // Sort by day of the week (Monday to Sunday)
+      }
     ]);
 
     // Map day of the week index to day name
     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     weeklySales.forEach(item => {
-        item.dayOfWeek = weekdays[item.dayOfWeek - 1];
+      item.dayOfWeek = weekdays[item.dayOfWeek - 1];
     });
 
     res.json({ success: true, sales: weeklySales });
-} catch (error) {
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+exports.storeSalesPerMonth = async (req, res, next) => {
+  const { id } = req.params;
+  const storeId = new ObjectId(id);
+  try {
+    const monthlySales = await Order.aggregate([
+      {
+        $match: {
+          'orderItems.storeId': storeId,
+          paidAt: { $exists: true }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$paidAt" },
+          totalSales: { $sum: "$totalPrice" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          totalSales: 1
+        }
+      },
+      {
+        $sort: { month: 1 } // Sort by month
+      }
+    ]);
+
+    res.json({ success: true, sales: monthlySales });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getDynamicSalesData = async (req, res, next) => {
+  try {
+    const { period, startDate, endDate } = req.query;
+    let filter = {};
+
+    if (period === 'daily') {
+        filter = {
+            createdAt: {
+                $gte: new Date(startDate),
+                $lt: new Date(endDate)
+            }
+        };
+    } else if (period === 'weekly') {
+        filter = {
+            createdAt: {
+                $gte: new Date(startDate),
+                $lt: new Date(endDate)
+            }
+        };
+    } else if (period === 'monthly') {
+        filter = {
+            createdAt: {
+                $gte: new Date(startDate),
+                $lt: new Date(endDate)
+            }
+        };
+    } else if (period === 'yearly') {
+        filter = {
+            createdAt: {
+                $gte: new Date(startDate),
+                $lt: new Date(endDate)
+            }
+        };
+    } else {
+        return res.status(400).json({ message: 'Invalid period' });
+    }
+
+    let dateFormat = '';
+
+    switch (period) {
+        case 'daily':
+            dateFormat = "%Y-%m-%d";
+            break;
+        case 'weekly':
+            dateFormat = "%Y-Week-%U"; // Year-WeekNumber
+            break;
+        case 'monthly':
+           dateFormat = "%B %Y" // Year-MonthNumber
+            break;
+        case 'yearly':
+            dateFormat = "%Y";
+            break;
+    }
+
+    const sales = await Order.aggregate([
+        {
+            $match: filter
+        },
+        {
+            $group: {
+                _id: {
+                    $dateToString: { format: dateFormat, date: "$createdAt" }
+                },
+                totalSales: { $sum: "$totalPrice" }
+            }
+        },
+        {
+            $sort: { "_id": 1 }
+        }
+    ]);
+
+    res.json({ period: period, sales: sales });
+} catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
 }
 };
+
+
 
 
 
