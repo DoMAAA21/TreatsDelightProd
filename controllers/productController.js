@@ -1,9 +1,12 @@
 const Product = require("../models/Product");
+const Order = require("../models/Order");
 const User = require("../models/User");
 const ErrorHandler = require("../utils/errorHandler");
 const cloudinary = require("cloudinary");
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 exports.allProducts = async (req, res, next) => {
   const storeId = req.params.id;
   const products = await Product.find({
@@ -43,38 +46,83 @@ exports.allStoreItems = async (req, res, next) => {
   });
 };
 
-
 exports.allItems = async (req, res, next) => {
-  const token = req.headers?.authorization;
-  let isMuslim = false;
+  try {
+    const token = req.headers?.authorization;
+    let personalizedProducts = [];
 
-  if (token) {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
-    if (req.user.religion.toLowerCase() === "muslim") {
-      isMuslim = true;
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id);
+
+      const userOrders = await Order.find({ 'user.id': req.user._id });
+
+      const productCountMap = {};
+
+      userOrders.forEach(order => {
+        order.orderItems.forEach(item => {
+          const productId = item.product.toString();
+          if (productCountMap[productId]) {
+            productCountMap[productId] += item.quantity; // Add quantity to count
+          } else {
+            productCountMap[productId] = item.quantity;
+          }
+        });
+      });
+
+
+      const sortedProducts = Object.keys(productCountMap).sort((a, b) => {
+        if (productCountMap[b] !== productCountMap[a]) {
+          return productCountMap[b] - productCountMap[a];
+        } else {
+          return productCountMap[b] - productCountMap[a];
+        }
+      });
+      for (const productId of sortedProducts) {
+        const product = await Product.findById(productId);
+        if (product) {
+          personalizedProducts.push(product);
+        }
+      }
     }
-  }
 
-  let products;
-  if (isMuslim) {
-    products = await Product.find({ halal: true });
-  } else {
-    products = await Product.find();
-  }
+    let products;
+    if (req.user.religion.toLowerCase() === "muslim") {
+      products = await Product.find({ halal: true });
+    } else {
+      products = await Product.find();
+    }
+    personalizedProducts.forEach(product => {
+      products = products.filter(prod => prod._id.toString() !== product._id.toString());
+    });
+    products = personalizedProducts.concat(products);
 
-  res.status(200).json({
-    success: true,
-    products,
-  });
+    res.status(200).json({
+      success: true,
+      products
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 };
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 const PAGE_SIZE = 8;
-
-
 
 exports.allItemsWeb = async (req, res, next) => {
   try {
@@ -153,6 +201,7 @@ exports.allItemsWeb = async (req, res, next) => {
     });
   }
 };
+
 
 
 
