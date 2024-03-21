@@ -14,7 +14,8 @@ const { ordersPerMonth,
     totalSalesValue,
     storeSalesPerDay,
     storeSalesPerMonth,
-    getDynamicSalesData
+    getDynamicSalesData,
+    getDynamicSoldData
 } = require('../controllers/chartController')
 
 router.route('/chart/orders-per-month').get(ordersPerMonth);
@@ -29,6 +30,7 @@ router.route('/chart/store/:id/sales-current-day').get(storeSalesCurrentDay);
 router.route('/chart/store/:id/sales-per-day').get(storeSalesPerDay);
 router.route('/chart/store/:id/sales-per-month').get(storeSalesPerMonth);
 router.route('/chart/store/:id/dynamic-sales').get(getDynamicSalesData);
+router.route('/chart/store/:id/dynamic-sold').get(getDynamicSoldData);
 router.route('/chart/top-stores').get(topStores);
 router.route('/chart/all-products-sold').get(allProductsSold);
 router.route('/chart/all-total-sale').get(totalSalesValue);

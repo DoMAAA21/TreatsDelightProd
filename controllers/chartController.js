@@ -519,7 +519,7 @@ exports.storeSalesPerDay = async (req, res, next) => {
       },
       {
         $group: {
-          _id: { $dayOfWeek: "$paidAt" }, // Group by day of the week
+          _id: { $dayOfWeek: "$paidAt" },
           totalSales: { $sum: "$totalPrice" }
         }
       },
@@ -588,98 +588,113 @@ exports.getDynamicSalesData = async (req, res, next) => {
     const { period, startDate, endDate } = req.query;
     let filter = {};
 
-    if (period === 'daily') {
-        filter = {
-            createdAt: {
-                $gte: new Date(startDate),
-                $lt: new Date(endDate)
-            }
-        };
-    } else if (period === 'weekly') {
-        filter = {
-            createdAt: {
-                $gte: new Date(startDate),
-                $lt: new Date(endDate)
-            }
-        };
-    } else if (period === 'monthly') {
-        filter = {
-            createdAt: {
-                $gte: new Date(startDate),
-                $lt: new Date(endDate)
-            }
-        };
-    } else if (period === 'yearly') {
-        filter = {
-            createdAt: {
-                $gte: new Date(startDate),
-                $lt: new Date(endDate)
-            }
-        };
+    if (period === 'daily' || period === 'weekly' || period === 'monthly' || period === 'yearly') {
+      filter = {
+        createdAt: {
+          $gte: new Date(startDate),
+          $lt: new Date(endDate)
+        }
+      };
     } else {
-        return res.status(400).json({ message: 'Invalid period' });
+      return res.status(400).json({ message: 'Invalid period' });
+    }
+
+
+    let dateFormat = '';
+
+    switch (period) {
+      case 'daily':
+        dateFormat = "%Y-%m-%d";
+        break;
+      case 'weekly':
+        dateFormat = "%Y-Week-%U"; // Year-WeekNumber
+        break;
+      case 'monthly':
+        dateFormat = "%B %Y" // Year-MonthNumber
+        break;
+      case 'yearly':
+        dateFormat = "%Y";
+        break;
+    }
+
+    const sales = await Order.aggregate([
+      {
+        $match: filter
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: dateFormat, date: "$createdAt" }
+          },
+          totalSales: { $sum: "$totalPrice" }
+        }
+      },
+      {
+        $sort: { "_id": 1 }
+      }
+    ]);
+
+    res.json({ period: period, sales: sales });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+exports.getDynamicSoldData = async (req, res, next) => {
+  try {
+    const { period, startDate, endDate } = req.query;
+    let filter = {};
+
+    if (period === 'daily' || period === 'weekly' || period === 'monthly' || period === 'yearly') {
+      filter = {
+        createdAt: {
+          $gte: new Date(startDate),
+          $lt: new Date(endDate)
+        }
+      };
+    } else {
+      return res.status(400).json({ message: 'Invalid period' });
     }
 
     let dateFormat = '';
 
     switch (period) {
-        case 'daily':
-            dateFormat = "%Y-%m-%d";
-            break;
-        case 'weekly':
-            dateFormat = "%Y-Week-%U"; // Year-WeekNumber
-            break;
-        case 'monthly':
-           dateFormat = "%B %Y" // Year-MonthNumber
-            break;
-        case 'yearly':
-            dateFormat = "%Y";
-            break;
+      case 'daily':
+        dateFormat = "%Y-%m-%d";
+        break;
+      case 'weekly':
+        dateFormat = "%Y-Week-%U"; // Year-WeekNumber
+        break;
+      case 'monthly':
+        dateFormat = "%B %Y"; // Year-MonthNumber
+        break;
+      case 'yearly':
+        dateFormat = "%Y";
+        break;
     }
 
-    const sales = await Order.aggregate([
-        {
-            $match: filter
-        },
-        {
-            $group: {
-                _id: {
-                    $dateToString: { format: dateFormat, date: "$createdAt" }
-                },
-                totalSales: { $sum: "$totalPrice" }
-            }
-        },
-        {
-            $sort: { "_id": 1 }
+    const sold = await Order.aggregate([
+      {
+        $match: filter
+      },
+      {
+        $unwind: "$orderItems"
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: dateFormat, date: "$paidAt" }
+          },
+          totalQuantity: { $sum: "$orderItems.quantity" }
         }
+      }
     ]);
 
-    res.json({ period: period, sales: sales });
-} catch (err) {
+    res.json({ period: period, sold: sold });
+  } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal Server Error' });
-}
+  }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
