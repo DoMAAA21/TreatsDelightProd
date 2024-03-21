@@ -39,6 +39,7 @@ exports.newOrder = async (req, res, next) => {
 
         const newOrderItems = orderItems.map(item => ({
             ...item,
+            product: item._id,
             id: uuid.v4(),
             status: 'Paid',
         }));
