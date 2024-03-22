@@ -147,7 +147,7 @@ exports.allItems = async (req, res, next) => {
       }
     });
 
-    const personalizedProductIds = sortedProducts.map(productId => mongoose.Types.ObjectId(productId));
+    const personalizedProductIds = sortedProducts.map(productId => new mongoose.Types.ObjectId(productId));
 
     const filter = {
       _id: { $nin: personalizedProductIds }, // Exclude personalized product IDs
