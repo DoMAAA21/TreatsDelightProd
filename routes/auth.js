@@ -50,6 +50,9 @@ router.get("/logout", logout);
 router.route('/user/health-declaration').patch(isAuthenticatedUser,submitHealthDeclaration);
 router.route('/user/get-health').get(isAuthenticatedUser,getUserHealth);
 
+router.route('/profile/user/:id')
+  .get(isAuthenticatedUser, getUserDetails)
+  .put(isAuthenticatedUser, upload.single("avatar"), updateUser)
 
 
 module.exports = router;
