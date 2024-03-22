@@ -46,77 +46,169 @@ exports.allStoreItems = async (req, res, next) => {
   });
 };
 
+// exports.allItems = async (req, res, next) => {
+//   try {
+//     const token = req.headers?.authorization;
+//     let personalizedProducts = [];
+
+
+//     if (token) {
+//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//       req.user = await User.findById(decoded.id);
+
+//       const userOrders = await Order.find({ 'user.id': req.user._id });
+
+//       const productCountMap = {};
+
+//       userOrders.forEach(order => {
+//         order.orderItems.forEach(item => {
+//           const productId = item.product.toString();
+//           if (productCountMap[productId]) {
+//             productCountMap[productId] += item.quantity; // Add quantity to count
+//           } else {
+//             productCountMap[productId] = item.quantity;
+//           }
+//         });
+//       });
+
+
+//       const sortedProducts = Object.keys(productCountMap).sort((a, b) => {
+//         if (productCountMap[b] !== productCountMap[a]) {
+//           return productCountMap[b] - productCountMap[a];
+//         } else {
+//           return productCountMap[b] - productCountMap[a];
+//         }
+//       });
+//       for (const productId of sortedProducts) {
+//         const product = await Product.findById(productId);
+//         if (product) {
+//           personalizedProducts.push(product);
+//         }
+//       }
+//     }
+
+//     let products;
+//     if (req.user.religion.toLowerCase() === "muslim") {
+//       products = await Product.find({ halal: true });
+//     } else {
+//       products = await Product.find();
+//     }
+//     personalizedProducts.forEach(product => {
+//       products = products.filter(prod => prod._id.toString() !== product._id.toString());
+//     });
+//     products = personalizedProducts.concat(products);
+
+//     res.status(200).json({
+//       success: true,
+//       products
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// };
+
+
+
 exports.allItems = async (req, res, next) => {
   try {
     const token = req.headers?.authorization;
-    let personalizedProducts = [];
 
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
-    if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
 
-      const userOrders = await Order.find({ 'user.id': req.user._id });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-      const productCountMap = {};
+    const userOrders = await Order.find({ 'user.id': user._id });
+    const productCountMap = {};
 
-      userOrders.forEach(order => {
-        order.orderItems.forEach(item => {
-          const productId = item.product.toString();
-          if (productCountMap[productId]) {
-            productCountMap[productId] += item.quantity; // Add quantity to count
-          } else {
-            productCountMap[productId] = item.quantity;
-          }
-        });
-      });
-
-
-      const sortedProducts = Object.keys(productCountMap).sort((a, b) => {
-        if (productCountMap[b] !== productCountMap[a]) {
-          return productCountMap[b] - productCountMap[a];
+    userOrders.forEach(order => {
+      order.orderItems.forEach(item => {
+        const productId = item.product.toString();
+        if (productCountMap[productId]) {
+          productCountMap[productId] += item.quantity; // Add quantity to count
         } else {
-          return productCountMap[b] - productCountMap[a];
+          productCountMap[productId] = item.quantity;
         }
       });
-      for (const productId of sortedProducts) {
-        const product = await Product.findById(productId);
-        if (product) {
-          personalizedProducts.push(product);
-        }
+    });
+
+    const sortedProducts = Object.keys(productCountMap).sort((a, b) => {
+      if (productCountMap[b] !== productCountMap[a]) {
+        return productCountMap[b] - productCountMap[a];
+      } else {
+        return productCountMap[b] - productCountMap[a];
       }
+    });
+
+    const personalizedProductIds = sortedProducts.map(productId => mongoose.Types.ObjectId(productId));
+
+    const filter = {
+      _id: { $nin: personalizedProductIds }, // Exclude personalized product IDs
+    };
+
+    if (user.religion.toLowerCase() === "muslim") {
+      filter.halal = true;
     }
 
-    let products;
-    if (req.user.religion.toLowerCase() === "muslim") {
-      products = await Product.find({ halal: true });
+    if (user.health) {
+      const hasKidneyProblems = user.health.kidneyProblem;
+      const hasHypertension = user.health.hypertension;
+      const hasCardiovascularDisease = user.health.cardiovascular;
+      const cholesterolThreshold = 50;
+
+      const aggregatePipeline = [
+        { $match: filter },
+        {
+          $addFields: {
+            filter: {
+              $and: [
+                { $lte: ["$nutrition.sugar", 15] },
+                {
+                  $or: [
+                    { $lte: ["$nutrition.cholesterol", cholesterolThreshold] },
+                    { $ne: [hasHypertension, true] },
+                    { $ne: [hasCardiovascularDisease, true] }
+                  ]
+                },
+                {
+                  $or: [
+                    { $lte: ["$nutrition.protein", 30] },
+                    { $ne: [hasKidneyProblems, true] }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        { $match: { filter: true } },
+      ];
+
+      const products = await Product.aggregate(aggregatePipeline);
+      
+      res.status(200).json({
+        success: true,
+        products
+      });
     } else {
-      products = await Product.find();
-    }
-    personalizedProducts.forEach(product => {
-      products = products.filter(prod => prod._id.toString() !== product._id.toString());
-    });
-    products = personalizedProducts.concat(products);
+      const products = await Product.find(filter);
 
-    res.status(200).json({
-      success: true,
-      products
-    });
+      res.status(200).json({
+        success: true,
+        products
+      });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -128,6 +220,7 @@ exports.allItemsWeb = async (req, res, next) => {
   try {
     const token = req.cookies?.token;
     let isMuslim = false;
+    let user;
 
     if (req.query.searchQuery && /[^a-zA-Z0-9]/.test(req.query.searchQuery)) {
       return;
@@ -135,8 +228,8 @@ exports.allItemsWeb = async (req, res, next) => {
 
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id);
-      if (req.user.religion.toLowerCase() === "muslim") {
+      user = await User.findById(decoded.id);
+      if (user.religion.toLowerCase() === "muslim") {
         isMuslim = true;
       }
     }
@@ -176,6 +269,26 @@ exports.allItemsWeb = async (req, res, next) => {
       query.halal = { $ne: false };
     }
 
+    // Nutritional conditions
+    const sugarThreshold = user?.health?.diabetic ? 12 : 9999;
+    const cholesterolThreshold = user?.health?.cardiovascular || user?.health?.heartDisease ? 50 : 9999;
+    const proteinThreshold = user?.health?.kidneyProblem ? 50 : 9999;
+    const fatThreshold = user?.health?.obese ? 50 : 9999;
+    const calorieThreshold = user?.health?.obese ? 1000 : 9999;
+    
+
+    
+      
+    const nutritionalConditions = {
+      'nutrition.sugar': { $lte: sugarThreshold },
+      'nutrition.cholesterol': { $lte: cholesterolThreshold },
+      'nutrition.protein': { $lte: proteinThreshold },
+      'nutrition.fat': { $lte: fatThreshold },
+      'nutrition.calories' : { $lte: calorieThreshold },
+    };
+
+    query = { ...query, ...nutritionalConditions };
+
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / PAGE_SIZE);
 
@@ -201,6 +314,85 @@ exports.allItemsWeb = async (req, res, next) => {
     });
   }
 };
+
+
+// exports.allItemsWeb = async (req, res, next) => {
+//   try {
+//     const token = req.cookies?.token;
+//     let isMuslim = false;
+
+//     if (req.query.searchQuery && /[^a-zA-Z0-9]/.test(req.query.searchQuery)) {
+//       return;
+//     }
+
+//     if (token) {
+//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//       req.user = await User.findById(decoded.id);
+//       if (req.user.religion.toLowerCase() === "muslim") {
+//         isMuslim = true;
+//       }
+//     }
+
+//     const page = parseInt(req.query.page) || 1;
+//     const startIndex = (page - 1) * PAGE_SIZE;
+
+//     let query = { active: true };
+
+//     if (req.query.category) {
+//       query.category = req.query.category; 
+//     }
+
+//     if (req.query.store) {
+//       query['store.name'] = req.query.store; // Adding the store filter
+//     }
+
+//     if (req.query.searchQuery) {
+//       const searchRegex = new RegExp(req.query.searchQuery, 'i');
+//       const searchFields = ['name', 'store.name'];
+
+//       const searchFilters = searchFields.map(field => ({
+//         [field]: { $regex: searchRegex }
+//       }));
+
+//       query = {
+//         $and: [
+//           query,
+//           {
+//             $or: searchFilters
+//           }
+//         ]
+//       };
+//     }
+
+//     if (isMuslim) {
+//       query.halal = { $ne: false };
+//     }
+
+//     const totalProducts = await Product.countDocuments(query);
+//     const totalPages = Math.ceil(totalProducts / PAGE_SIZE);
+
+//     const allProducts = await Product.find(query)
+//       .skip(startIndex)
+//       .limit(PAGE_SIZE);
+
+//     const hasMore = page < totalPages;
+
+//     res.status(200).json({
+//       success: true,
+//       totalProducts,
+//       products: allProducts,
+//       currentPage: page,
+//       totalPages,
+//       hasMore
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Internal Server Error'
+//     });
+//   }
+// };
 
 
 

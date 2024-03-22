@@ -32,7 +32,6 @@ router
   .get(isAuthenticatedUser, authorizeRoles('Admin', 'Employee', 'Owner'), allUsers);
 router.get("/admin/owners",isAuthenticatedUser, authorizeRoles('Admin'), allOwners);
 
-
 router.post("/admin/user/new", isAuthenticatedUser, authorizeRoles('Admin', 'Employee'), upload.single("avatar"), newUser);
 router.route('/admin/user/:id')
   .get(isAuthenticatedUser, authorizeRoles('Admin', 'Employee'), getUserDetails)
@@ -46,9 +45,6 @@ router.route('/edit-profile/:id')
 router.post("/register", registerUser);
 
 router.post("/login", loginUser);
-
-
-
 
 router.get("/logout", logout);
 router.route('/user/health-declaration').patch(isAuthenticatedUser,submitHealthDeclaration);
