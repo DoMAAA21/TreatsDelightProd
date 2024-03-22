@@ -276,11 +276,8 @@ exports.allItemsWeb = async (req, res, next) => {
     const fatThreshold = user?.health?.obese ? 50 : 9999;
     const calorieThreshold = user?.health?.obese ? 1000 : 9999;
     
-
-    
-      
     const nutritionalConditions = {
-      'nutrition.sugar': { $lte: sugarThreshold },
+      'nutrition.sugar': { $lte: sugarThreshold }, //fetch only products that are in threshold
       'nutrition.cholesterol': { $lte: cholesterolThreshold },
       'nutrition.protein': { $lte: proteinThreshold },
       'nutrition.fat': { $lte: fatThreshold },
