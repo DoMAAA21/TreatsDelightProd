@@ -17,13 +17,13 @@ const {
   logout,
   allUsers,
   allOwners,
-  updateProfile,
   getUserDetails,
   updateUser,
   deleteUser,
   newUser,
   submitHealthDeclaration,
-  getUserHealth
+  getUserHealth,
+  updateProfile
 } = require("../controllers/userController");
 
 router.post("/verify-token", verifyToken);
@@ -52,7 +52,7 @@ router.route('/user/get-health').get(isAuthenticatedUser,getUserHealth);
 
 router.route('/profile/user/:id')
   .get(isAuthenticatedUser, getUserDetails)
-  .put(isAuthenticatedUser, upload.single("avatar"), updateUser)
+  .put(isAuthenticatedUser, upload.single("avatar"), updateProfile)
 
 
 module.exports = router;
