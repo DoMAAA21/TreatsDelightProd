@@ -10,11 +10,6 @@ const {
   authorizeRoles,
 } = require("../middlewares/auth");
 
-
-
-
-
-
 const {
   verifyToken,
   registerUser,
@@ -26,7 +21,9 @@ const {
   getUserDetails,
   updateUser,
   deleteUser,
-  newUser
+  newUser,
+  submitHealthDeclaration,
+  getUserHealth
 } = require("../controllers/userController");
 
 router.post("/verify-token", verifyToken);
@@ -54,7 +51,8 @@ router.post("/login", loginUser);
 
 
 router.get("/logout", logout);
-
+router.route('/user/health-declaration').patch(isAuthenticatedUser,submitHealthDeclaration);
+router.route('/user/get-health').get(isAuthenticatedUser,getUserHealth);
 
 
 
