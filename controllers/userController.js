@@ -330,7 +330,6 @@ exports.loginUser = async (req, res, next) => {
 };
 
 
-
 exports.googlelogin = async (req, res, next) => {
 
   console.log(req.body.response);
@@ -425,8 +424,42 @@ exports.registerUser = async (req, res, next) => {
   }
 };
 
+exports.submitHealthDeclaration = async (req, res) => {
+  try {
+      const { diabetic, hypertension, kidneyProblem, cardiovascular, obese, heartDisease, none } = req.body;
+      const userId = req.user._id; 
+      const updatedUser = await User.findByIdAndUpdate(userId, {
+          health: {
+              diabetic,
+              hypertension,
+              kidneyProblem,
+              cardiovascular,
+              obese,
+              heartDisease,
+              none
+          }
+      }, { new: true });
+
+      if (!updatedUser) {
+          return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.status(200).json({ success: true, user: updatedUser });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 
+
+exports.getUserHealth = async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+  res.status(200).json({
+    success: true,
+    user,
+  });
+};
 
 
 exports.getUserProfile = async (req, res, next) => {
@@ -438,3 +471,5 @@ exports.getUserProfile = async (req, res, next) => {
     user,
   });
 };
+
+

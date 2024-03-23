@@ -71,7 +71,43 @@ const userSchema = new mongoose.Schema({
 
     default: "User",
   },
-
+  health: {
+    diabetic: {
+      type: Boolean,
+      default: false,
+      required: false
+    },
+    hypertension: {
+      type: Boolean,
+      default: false,
+      required: false
+    },
+    kidneyProblem: {
+      type: Boolean,
+      default: false,
+      required: false
+    },
+    cardiovascular: {
+      type: Boolean,
+      default: false,
+      required: false
+    },
+    obese: {
+      type: Boolean,
+      default: false,
+      required: false
+    },
+    heartDisease: {
+      type: Boolean,
+      default: false,
+      required: false
+    },
+    none: {
+      type: Boolean,
+      default: false,
+      required: true
+    }
+  },
   googleId: {
     type: String,
     required: false,

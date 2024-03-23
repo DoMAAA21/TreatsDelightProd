@@ -10,11 +10,6 @@ const {
   authorizeRoles,
 } = require("../middlewares/auth");
 
-
-
-
-
-
 const {
   verifyToken,
   registerUser,
@@ -22,11 +17,13 @@ const {
   logout,
   allUsers,
   allOwners,
-  updateProfile,
   getUserDetails,
   updateUser,
   deleteUser,
-  newUser
+  newUser,
+  submitHealthDeclaration,
+  getUserHealth,
+  updateProfile
 } = require("../controllers/userController");
 
 router.post("/verify-token", verifyToken);
@@ -34,7 +31,6 @@ router
   .route("/admin/users")
   .get(isAuthenticatedUser, authorizeRoles('Admin', 'Employee', 'Owner'), allUsers);
 router.get("/admin/owners",isAuthenticatedUser, authorizeRoles('Admin'), allOwners);
-
 
 router.post("/admin/user/new", isAuthenticatedUser, authorizeRoles('Admin', 'Employee'), upload.single("avatar"), newUser);
 router.route('/admin/user/:id')
@@ -50,12 +46,13 @@ router.post("/register", registerUser);
 
 router.post("/login", loginUser);
 
-
-
-
 router.get("/logout", logout);
+router.route('/user/health-declaration').patch(isAuthenticatedUser,submitHealthDeclaration);
+router.route('/user/get-health').get(isAuthenticatedUser,getUserHealth);
 
-
+router.route('/profile/user/:id')
+  .get(isAuthenticatedUser, getUserDetails)
+  .put(isAuthenticatedUser, upload.single("avatar"), updateProfile)
 
 
 module.exports = router;
