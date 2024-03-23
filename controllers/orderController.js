@@ -184,7 +184,7 @@ exports.updateOrder = async (req, res, next) => {
         if(status === "Completed"){
             if(order?.user?.id){
                 await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
-            }
+           
             const notification = new Notification({
                 message: `Your order item "${orderItem.name}" has been completed.".`,
                 recipient: order.user.id,
@@ -196,12 +196,13 @@ exports.updateOrder = async (req, res, next) => {
                 }
             });
             notification.save();
+                }
         }
 
         if(status === "Incomplete"){
             if(order?.user?.id){
             await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Incomplete Order' });
-            }
+            
             const notification = new Notification({
                 message: `Incomplete order "${orderItem.name}".`,
                 recipient: order.user.id,
@@ -213,6 +214,7 @@ exports.updateOrder = async (req, res, next) => {
                 }
             });
             notification.save();
+                 }
         }
 
         await order.save();
