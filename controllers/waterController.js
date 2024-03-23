@@ -35,7 +35,7 @@ exports.newWater = async (req, res, next) => {
   const { total, additionals, consumed, price, type, note, storeId, startAt, endAt, issuedAt, paidAt } = req.body;
   try {
     const paidDate = (type === "paid") ? paidAt : null;
-    const waterAmt = (type === "paid") ? total : -total;
+    const waterAmt = (type === "topay") ? -total : 0;
     const water = await Water.create({
       storeId,
       total: waterAmt,
@@ -58,7 +58,8 @@ exports.newWater = async (req, res, next) => {
         message: 'Store not found.',
       });
     }
-    store.water = (store.water ?? 0) + ((type === "paid") ? total : -total);
+    
+    store.water = (store.water ?? 0) - total;
 
     await store.save();
 
@@ -101,6 +102,44 @@ exports.restoreWater = async (req, res, next) => {
     }
     water.deletedAt = null;
     await water.save();
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+    next(new ErrorHandler('Internal Server Error'));
+  }
+};
+
+
+exports.updateWaterStatus = async (req, res, next) => {
+  try {
+    const { id, storeId } = req.body;
+    const water = await Water.findById(id);
+    
+    if (!water) {
+      return next(new ErrorHandler(`Water not found with id: ${id}`));
+    }
+
+    if (water.total < 0) {
+      water.total = Math.abs(water.total);
+    }
+    water.paidAt = new Date();
+    water.type = 'paid';
+    await water.save();
+
+    
+    const store = await Store.findOne({ _id: storeId });
+
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: 'Store not found.',
+      });
+    }
+    store.water = (store.water ?? 0) + water.total;
+
+    await store.save();
     res.status(200).json({
       success: true,
     });

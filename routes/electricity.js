@@ -6,7 +6,8 @@ const {
   archivedElectricity,
   newElectricity,
   deleteElectricity,
-  restoreElectricity
+  restoreElectricity,
+  updateElectricityStatus
 } = require("../controllers/electricityController");
 
 const {
@@ -26,6 +27,9 @@ router
 router.route('/admin/electricity/:id').delete(isAuthenticatedUser, authorizeRoles('Admin', 'Employee'), deleteElectricity);
 router.route('/admin/electricity/restore')
   .put(isAuthenticatedUser,authorizeRoles('Admin', 'Employee'),restoreElectricity)
+
+router.route('/admin/electricity/update-status')
+  .patch(isAuthenticatedUser,authorizeRoles('Admin', 'Employee'),updateElectricityStatus)
 
 
 

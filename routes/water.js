@@ -6,7 +6,8 @@ const {
   archivedWaters,
   newWater,
   deleteWater,
-  restoreWater
+  restoreWater,
+  updateWaterStatus
 } = require("../controllers/waterController");
 
 const {
@@ -25,7 +26,11 @@ router
 
 router.route('/admin/water/:id').delete(isAuthenticatedUser, authorizeRoles('Admin', 'Employee'), deleteWater);
 router.route('/admin/water/restore')
-  .put(isAuthenticatedUser,authorizeRoles('Admin', 'Employee'),restoreWater)
+  .put(isAuthenticatedUser,authorizeRoles('Admin', 'Employee'),restoreWater);
+
+
+router.route('/admin/water/update-status')
+  .patch(isAuthenticatedUser,authorizeRoles('Admin', 'Employee'),updateWaterStatus)
 
 
 
