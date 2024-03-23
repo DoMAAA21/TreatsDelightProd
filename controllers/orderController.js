@@ -182,7 +182,9 @@ exports.updateOrder = async (req, res, next) => {
         const orderItem = order.orderItems[orderItemIndex];
         orderItem.status = status
         if(status === "Completed"){
-            await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+            if(order?.user?.id){
+                await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
+            }
             const notification = new Notification({
                 message: `Your order item "${orderItem.name}" has been completed.".`,
                 recipient: order.user.id,
@@ -197,7 +199,9 @@ exports.updateOrder = async (req, res, next) => {
         }
 
         if(status === "Incomplete"){
+            if(order?.user?.id){
             await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Incomplete Order' });
+            }
             const notification = new Notification({
                 message: `Incomplete order "${orderItem.name}".`,
                 recipient: order.user.id,
@@ -297,9 +301,9 @@ exports.scanUpdateOrder = async (req, res, next) => {
             }
         });
 
-      
+        if(order?.user?.id){
         await global.io.timeout(1000).emit(`notification/${order.user.id}`, { type: 'success', message: 'Order completed' });
-
+        }
         await order.save();
         res.status(200).json({ success: true, message: 'Order item status updated successfully', order });
     } catch (error) {
