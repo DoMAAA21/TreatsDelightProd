@@ -6,7 +6,8 @@ const {
   archivedMaintenances,
   newMaintenance,
   deleteMaintenance,
-  restoreMaintenance
+  restoreMaintenance,
+  updateMaintenanceStatus
 } = require("../controllers/maintenanceController");
 
 const {
@@ -27,6 +28,7 @@ router.route('/admin/maintenance/:id').delete(isAuthenticatedUser, authorizeRole
 router.route('/admin/maintenance/restore')
   .put(isAuthenticatedUser,authorizeRoles('Admin', 'Employee'),restoreMaintenance)
 
-
+router.route('/admin/maintenance/update-status')
+  .patch(isAuthenticatedUser,authorizeRoles('Admin', 'Employee'),updateMaintenanceStatus)
 
 module.exports = router;
