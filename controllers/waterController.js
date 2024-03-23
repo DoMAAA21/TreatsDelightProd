@@ -1,6 +1,6 @@
 const Water = require("../models/Water");
 const Store = require("../models/Store");
-
+const ErrorHandler = require("../utils/errorHandler");
 
 exports.allWaters = async (req, res, next) => {
   const waters = await Water.find({
@@ -148,6 +148,7 @@ exports.updateWaterStatus = async (req, res, next) => {
     next(new ErrorHandler('Internal Server Error'));
   }
 };
+
 
 
 

@@ -1,4 +1,5 @@
 const Electricity = require("../models/Electricity");
+const ErrorHandler = require("../utils/errorHandler");
 const Store = require("../models/Store");
 
 
@@ -32,7 +33,7 @@ exports.archivedElectricity = async (req, res, next) => {
 };
 
 exports.newElectricity = async (req, res, next) => {
-  const { total, additionals, consumed, price, type, note, storeId, startAt,endAt, issuedAt, paidAt } = req.body;
+  const { total, additionals, consumed, price, type, note, storeId, startAt, endAt, issuedAt, paidAt } = req.body;
   try {
     const paidDate = (type === "paid") ? paidAt : null;
     const electricityAmt = (type === "topay") ? -total : 0;
@@ -84,7 +85,7 @@ exports.deleteElectricity = async (req, res, next) => {
     electricity.deletedAt = new Date();
     await electricity.save();
     res.status(200).json({
-    success: true,
+      success: true,
     });
   } catch (error) {
     console.error(error);
@@ -116,7 +117,7 @@ exports.updateElectricityStatus = async (req, res, next) => {
   try {
     const { id, storeId } = req.body;
     const electricity = await Electricity.findById(id);
-    
+
     if (!electricity) {
       return next(new ErrorHandler(`Electricity not found with id: ${id}`));
     }
@@ -128,7 +129,7 @@ exports.updateElectricityStatus = async (req, res, next) => {
     electricity.type = 'paid';
     await electricity.save();
 
-    
+
     const store = await Store.findOne({ _id: storeId });
 
     if (!store) {

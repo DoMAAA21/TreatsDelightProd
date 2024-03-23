@@ -6,7 +6,8 @@ const {
   archivedRents,
   newRent,
   deleteRent,
-  restoreRent
+  restoreRent,
+  updateRentStatus
 } = require("../controllers/rentController");
 
 const {
@@ -27,7 +28,8 @@ router
 
 router.route('/admin/rent/:id').delete(isAuthenticatedUser, authorizeRoles('Admin', 'Employee'), deleteRent);
 
-
+router.route('/admin/rent/update-status')
+  .patch(isAuthenticatedUser,authorizeRoles('Admin', 'Employee'),updateRentStatus)
 
 
 module.exports = router;

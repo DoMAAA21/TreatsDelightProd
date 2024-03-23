@@ -1,6 +1,6 @@
 const Rent = require("../models/Rent");
 const Store = require("../models/Store");
-
+const ErrorHandler = require("../utils/errorHandler");
 
 exports.allRents = async (req, res, next) => {
   const rents = await Rent.find({
@@ -35,7 +35,7 @@ exports.newRent = async (req, res, next) => {
   const { amount, type, note, storeId, issuedAt, paidAt } = req.body;
   try {
     const paidDate = (type === "paid") ? paidAt : null;
-    const rentAmt = (type === "paid") ? amount : -amount;
+    const rentAmt = (type === "topay") ? -amount : 0;
     const rent = await Rent.create({
       storeId,
       amount: rentAmt,
@@ -53,7 +53,7 @@ exports.newRent = async (req, res, next) => {
         message: 'Store not found.',
       });
     }
-    store.rent = (store.rent ?? 0) + ((type === "paid") ? amount : -amount);
+    store.rent = (store.rent ?? 0) - amount;
 
     await store.save();
 
@@ -96,6 +96,44 @@ exports.restoreRent = async (req, res, next) => {
     }
     rent.deletedAt = null;
     await rent.save();
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+    next(new ErrorHandler('Internal Server Error'));
+  }
+};
+
+
+exports.updateRentStatus = async (req, res, next) => {
+  try {
+    const { id, storeId } = req.body;
+    const rent = await Rent.findById(id);
+    
+    if (!rent) {
+      return next(new ErrorHandler(`Rent not found with id: ${id}`));
+    }
+
+    if (rent.amount < 0) {
+      rent.amount = Math.abs(rent.amount);
+    }
+    rent.paidAt = new Date();
+    rent.type = 'paid';
+    await rent.save();
+
+    
+    const store = await Store.findOne({ _id: storeId });
+
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: 'Store not found.',
+      });
+    }
+    store.rent = (store.rent ?? 0) + rent.amount;
+
+    await store.save();
     res.status(200).json({
       success: true,
     });
