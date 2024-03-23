@@ -46,6 +46,9 @@ exports.allStoreItems = async (req, res, next) => {
   });
 };
 
+
+
+const PAGE_SIZE = 8;
 exports.allItems = async (req, res, next) => {
   try {
     const token = req.headers?.authorization;
@@ -108,30 +111,10 @@ exports.allItems = async (req, res, next) => {
   }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const PAGE_SIZE = 8;
-
 exports.allItemsWeb = async (req, res, next) => {
   try {
     const token = req.cookies?.token;
     let isMuslim = false;
-
-    if (req.query.searchQuery && /[^a-zA-Z0-9]/.test(req.query.searchQuery)) {
-      return;
-    }
 
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -158,28 +141,40 @@ exports.allItemsWeb = async (req, res, next) => {
       const searchRegex = new RegExp(req.query.searchQuery, 'i');
       const searchFields = ['name', 'store.name'];
 
-      const searchFilters = searchFields.map(field => ({
-        [field]: { $regex: searchRegex }
-      }));
-
-      query = {
-        $and: [
-          query,
-          {
-            $or: searchFilters
-          }
-        ]
-      };
+      let searchFilters;
+      if (searchFields.length > 0) {
+        searchFilters = searchFields.map(field => ({
+          [field]: { $regex: searchRegex }
+        }));
+        query = {
+          $and: [
+            query,
+            {
+              $or: searchFilters
+            }
+          ]
+        };
+      }
     }
 
     if (isMuslim) {
       query.halal = { $ne: false };
     }
 
+    // Fetch user's order history items
+    const userOrderItems = await getUserOrderItems(req.user._id);
+
+    const productIds = userOrderItems.flatMap(order => order.orderItems.map(orderItem => orderItem.product));
+
+    console.log(productIds);
+    query._id = { $nin: productIds };
+
+    console.log(query);
+
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / PAGE_SIZE);
 
-    const allProducts = await Product.find(query)
+    const remainingProducts = await Product.find(query)
       .skip(startIndex)
       .limit(PAGE_SIZE);
 
@@ -188,7 +183,7 @@ exports.allItemsWeb = async (req, res, next) => {
     res.status(200).json({
       success: true,
       totalProducts,
-      products: allProducts,
+      products: remainingProducts,
       currentPage: page,
       totalPages,
       hasMore
@@ -201,6 +196,95 @@ exports.allItemsWeb = async (req, res, next) => {
     });
   }
 };
+
+async function getUserOrderItems(userId) {
+  // Assuming you have a function to retrieve user's order items from the database
+  // You can replace this with your actual implementation
+  return Order.find({ 'user.id': userId });
+}
+
+
+
+
+// const PAGE_SIZE = 8;
+
+// exports.allItemsWeb = async (req, res, next) => {
+//   try {
+//     const token = req.cookies?.token;
+//     let isMuslim = false;
+
+//     if (req.query.searchQuery && /[^a-zA-Z0-9]/.test(req.query.searchQuery)) {
+//       return;
+//     }
+
+//     if (token) {
+//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//       req.user = await User.findById(decoded.id);
+//       if (req.user.religion.toLowerCase() === "muslim") {
+//         isMuslim = true;
+//       }
+//     }
+
+//     const page = parseInt(req.query.page) || 1;
+//     const startIndex = (page - 1) * PAGE_SIZE;
+
+//     let query = { active: true };
+
+//     if (req.query.category) {
+//       query.category = req.query.category; 
+//     }
+
+//     if (req.query.store) {
+//       query['store.name'] = req.query.store; // Adding the store filter
+//     }
+
+//     if (req.query.searchQuery) {
+//       const searchRegex = new RegExp(req.query.searchQuery, 'i');
+//       const searchFields = ['name', 'store.name'];
+
+//       const searchFilters = searchFields.map(field => ({
+//         [field]: { $regex: searchRegex }
+//       }));
+
+//       query = {
+//         $and: [
+//           query,
+//           {
+//             $or: searchFilters
+//           }
+//         ]
+//       };
+//     }
+
+//     if (isMuslim) {
+//       query.halal = { $ne: false };
+//     }
+
+//     const totalProducts = await Product.countDocuments(query);
+//     const totalPages = Math.ceil(totalProducts / PAGE_SIZE);
+
+//     const allProducts = await Product.find(query)
+//       .skip(startIndex)
+//       .limit(PAGE_SIZE);
+
+//     const hasMore = page < totalPages;
+
+//     res.status(200).json({
+//       success: true,
+//       totalProducts,
+//       products: allProducts,
+//       currentPage: page,
+//       totalPages,
+//       hasMore
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Internal Server Error'
+//     });
+//   }
+// };
 
 
 
