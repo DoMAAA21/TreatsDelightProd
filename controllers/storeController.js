@@ -385,6 +385,73 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 
+cron.schedule('0 0 * * *', async () => {
+  try {
+    const stores = await Store.find({
+      'permit.contract': {
+        $gte: new Date(),
+        $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      },
+    });
+
+    for (const store of stores) {
+      const owners = await User.find({ 'store.storeId': store._id });
+
+      for (const owner of owners) {
+        const notification = new Notification({
+          message: `Your permit for ${store.name} is expiring within 7 days.`,
+          recipient: owner._id,
+          image: 'https://images.emojiterra.com/google/noto-emoji/unicode-15.1/color/share/2757.jpg',
+        });
+        
+        await notification.save();
+      }
+    }
+  } catch (error) {
+    console.error('Error scheduling 7 days left notification:', error);
+  }
+});
+
+
+cron.schedule('0 0 * * *', async () => {
+  try {
+    const stores = await Store.find({
+      $and: [
+        {
+          'permit.contract': {
+            $gte: new Date(),
+            $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+        },
+        {
+          'permit.contract': {
+            $not: {
+              $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            },
+          },
+        },
+      ],
+    });
+
+    for (const store of stores) {
+      const owners = await User.find({ 'store.storeId': store._id });
+
+      for (const owner of owners) {
+        const notification = new Notification({
+          message: `Your contract for ${store.name} is expiring within 30 days.`,
+          recipient: owner._id,
+          image: 'https://images.emojiterra.com/google/noto-emoji/unicode-15.1/color/share/2757.jpg',
+        });
+        
+        await notification.save();
+      }
+    }
+  } catch (error) {
+    console.error('Error scheduling 30 days left notification:', error);
+  }
+});
+
+
 
 
 
