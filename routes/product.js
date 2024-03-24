@@ -15,7 +15,8 @@ const {
  updateStocks,
  allItemsWeb,
  getAIKey,
- fetchNutrition
+ fetchNutrition,
+ allDoctorItems
 } = require("../controllers/productController");
 
 const {
@@ -30,7 +31,7 @@ router.get("/admin/store/:id/products",isAuthenticatedUser,authorizeRoles('Owner
 router.get("/admin/store/:id/meals",isAuthenticatedUser,authorizeRoles('Owner', 'Employee'),allMeals);
 router.get("/admin/store/:id/all-store-items",isAuthenticatedUser,authorizeRoles('Owner', 'Employee'),allStoreItems);
 router.get("/allItems",allItems);
-router.get("/doctor/all-items",allItems);
+router.get("/doctor/all-items",isAuthenticatedUser,authorizeRoles('Admin','Doctor'),allDoctorItems);
 router.get("/allItemsWeb",allItemsWeb);
 
 router.route('/admin/product/:id')

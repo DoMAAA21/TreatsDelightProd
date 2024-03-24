@@ -46,68 +46,17 @@ exports.allStoreItems = async (req, res, next) => {
   });
 };
 
-// exports.allItems = async (req, res, next) => {
-//   try {
-//     const token = req.headers?.authorization;
-//     let personalizedProducts = [];
 
 
-//     if (token) {
-//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//       req.user = await User.findById(decoded.id);
+exports.allDoctorItems = async (req, res, next) => {
+  const products = await Product.find();
 
-//       const userOrders = await Order.find({ 'user.id': req.user._id });
+  res.status(200).json({
+    success: true,
 
-//       const productCountMap = {};
-
-//       userOrders.forEach(order => {
-//         order.orderItems.forEach(item => {
-//           const productId = item.product.toString();
-//           if (productCountMap[productId]) {
-//             productCountMap[productId] += item.quantity; // Add quantity to count
-//           } else {
-//             productCountMap[productId] = item.quantity;
-//           }
-//         });
-//       });
-
-
-//       const sortedProducts = Object.keys(productCountMap).sort((a, b) => {
-//         if (productCountMap[b] !== productCountMap[a]) {
-//           return productCountMap[b] - productCountMap[a];
-//         } else {
-//           return productCountMap[b] - productCountMap[a];
-//         }
-//       });
-//       for (const productId of sortedProducts) {
-//         const product = await Product.findById(productId);
-//         if (product) {
-//           personalizedProducts.push(product);
-//         }
-//       }
-//     }
-
-//     let products;
-//     if (req.user.religion.toLowerCase() === "muslim") {
-//       products = await Product.find({ halal: true });
-//     } else {
-//       products = await Product.find();
-//     }
-//     personalizedProducts.forEach(product => {
-//       products = products.filter(prod => prod._id.toString() !== product._id.toString());
-//     });
-//     products = personalizedProducts.concat(products);
-
-//     res.status(200).json({
-//       success: true,
-//       products
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Internal Server Error' });
-//   }
-// };
-
+    products,
+  });
+};
 
 
 exports.allItems = async (req, res, next) => {
