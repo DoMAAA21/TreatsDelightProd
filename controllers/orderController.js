@@ -26,12 +26,12 @@ exports.newOrder = async (req, res, next) => {
                 });
             }
             if (!product.portion) {
-                if (item.quantity > product.stock) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Insufficient stock for product: ' + product.name,
-                    });
-                }
+                // if (item.quantity > product.stock) {
+                //     return res.status(400).json({
+                //         success: false,
+                //         message: 'Insufficient stock for product: ' + product.name,
+                //     });
+                // }
                 product.stock -= item.quantity;
                 await product.save();
             }
