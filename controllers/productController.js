@@ -77,13 +77,13 @@ exports.allItems = async (req, res, next) => {
     const userOrders = await Order.find({ 'user.id': user._id });
     const productCountMap = {};
 
-    userOrders.forEach(order => {
+    userOrders?.forEach(order => {
       order.orderItems.forEach(item => {
-        const productId = item.product.toString();
+        const productId = item?.product.toString();
         if (productCountMap[productId]) {
-          productCountMap[productId] += item.quantity; // Add quantity to count
+          productCountMap[productId] += item?.quantity; // Add quantity to count
         } else {
-          productCountMap[productId] = item.quantity;
+          productCountMap[productId] = item?.quantity;
         }
       });
     });
