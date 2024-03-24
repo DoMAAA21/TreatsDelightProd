@@ -79,11 +79,13 @@ exports.allItems = async (req, res, next) => {
 
     userOrders?.forEach(order => {
       order.orderItems.forEach(item => {
-        const productId = item?.product.toString();
-        if (productCountMap[productId]) {
-          productCountMap[productId] += item?.quantity; // Add quantity to count
-        } else {
-          productCountMap[productId] = item?.quantity;
+        const productId = item?.product?.toString();
+        if(productId){
+          if (productCountMap[productId]) {
+            productCountMap[productId] += item?.quantity; // Add quantity to count
+          } else {
+            productCountMap[productId] = item?.quantity;
+          }
         }
       });
     });
