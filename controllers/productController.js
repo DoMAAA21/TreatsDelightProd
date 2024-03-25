@@ -59,6 +59,109 @@ exports.allDoctorItems = async (req, res, next) => {
 };
 
 
+// exports.allItems = async (req, res, next) => {
+//   try {
+//     const token = req.headers?.authorization;
+
+//     if (!token) {
+//       return res.status(401).json({ message: 'Unauthorized' });
+//     }
+
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const user = await User.findById(decoded.id);
+
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     const userOrders = await Order.find({ 'user.id': user._id });
+//     const productCountMap = {};
+
+//     userOrders?.forEach(order => {
+//       order.orderItems.forEach(item => {
+//         const productId = item?.product?.toString();
+//         if(productId){
+//           if (productCountMap[productId]) {
+//             productCountMap[productId] += item?.quantity; // Add quantity to count
+//           } else {
+//             productCountMap[productId] = item?.quantity;
+//           }
+//         }
+//       });
+//     });
+
+//     const sortedProducts = Object.keys(productCountMap).sort((a, b) => {
+//       if (productCountMap[b] !== productCountMap[a]) {
+//         return productCountMap[b] - productCountMap[a];
+//       } else {
+//         return productCountMap[b] - productCountMap[a];
+//       }
+//     });
+
+//     const personalizedProductIds = sortedProducts.map(productId => new mongoose.Types.ObjectId(productId));
+
+//     const filter = {
+//       _id: { $nin: personalizedProductIds }, // Exclude personalized product IDs
+//     };
+
+//     if (user.religion.toLowerCase() === "muslim") {
+//       filter.halal = true;
+//     }
+
+//     if (user.health) {
+//       const hasKidneyProblems = user.health.kidneyProblem;
+//       const hasHypertension = user.health.hypertension;
+//       const hasCardiovascularDisease = user.health.cardiovascular;
+//       const cholesterolThreshold = 50;
+
+//       const aggregatePipeline = [
+//         { $match: filter },
+//         {
+//           $addFields: {
+//             filter: {
+//               $and: [
+//                 { $lte: ["$nutrition.sugar", 15] },
+//                 {
+//                   $or: [
+//                     { $lte: ["$nutrition.cholesterol", cholesterolThreshold] },
+//                     { $ne: [hasHypertension, true] },
+//                     { $ne: [hasCardiovascularDisease, true] }
+//                   ]
+//                 },
+//                 {
+//                   $or: [
+//                     { $lte: ["$nutrition.protein", 30] },
+//                     { $ne: [hasKidneyProblems, true] }
+//                   ]
+//                 }
+//               ]
+//             }
+//           }
+//         },
+//         { $match: { filter: true } },
+//       ];
+
+//       const products = await Product.aggregate(aggregatePipeline);
+      
+//       res.status(200).json({
+//         success: true,
+//         products
+//       });
+//     } else {
+//       const products = await Product.find(filter);
+
+//       res.status(200).json({
+//         success: true,
+//         products
+//       });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// };
+
+
 exports.allItems = async (req, res, next) => {
   try {
     const token = req.headers?.authorization;
@@ -74,93 +177,38 @@ exports.allItems = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const userOrders = await Order.find({ 'user.id': user._id });
-    const productCountMap = {};
-
-    userOrders?.forEach(order => {
-      order.orderItems.forEach(item => {
-        const productId = item?.product?.toString();
-        if(productId){
-          if (productCountMap[productId]) {
-            productCountMap[productId] += item?.quantity; // Add quantity to count
-          } else {
-            productCountMap[productId] = item?.quantity;
-          }
-        }
-      });
-    });
-
-    const sortedProducts = Object.keys(productCountMap).sort((a, b) => {
-      if (productCountMap[b] !== productCountMap[a]) {
-        return productCountMap[b] - productCountMap[a];
-      } else {
-        return productCountMap[b] - productCountMap[a];
-      }
-    });
-
-    const personalizedProductIds = sortedProducts.map(productId => new mongoose.Types.ObjectId(productId));
-
-    const filter = {
-      _id: { $nin: personalizedProductIds }, // Exclude personalized product IDs
-    };
-
+    let filter = {};
     if (user.religion.toLowerCase() === "muslim") {
       filter.halal = true;
     }
 
-    if (user.health) {
-      const hasKidneyProblems = user.health.kidneyProblem;
-      const hasHypertension = user.health.hypertension;
-      const hasCardiovascularDisease = user.health.cardiovascular;
-      const cholesterolThreshold = 50;
+    const sugarThreshold = user?.health?.diabetic ? 12 : 9999;
+    const cholesterolThreshold = user?.health?.cardiovascular || user?.health?.heartDisease ? 50 : 9999;
+    const proteinThreshold = user?.health?.kidneyProblem ? 50 : 9999;
+    const fatThreshold = user?.health?.obese ? 50 : 9999;
+    const calorieThreshold = user?.health?.obese ? 1000 : 9999;
+    
+    const nutritionalConditions = {
+      'nutrition.sugar': { $lte: sugarThreshold }, //fetch only products that are in threshold
+      'nutrition.cholesterol': { $lte: cholesterolThreshold },
+      'nutrition.protein': { $lte: proteinThreshold },
+      'nutrition.fat': { $lte: fatThreshold },
+      'nutrition.calories' : { $lte: calorieThreshold },
+    };
 
-      const aggregatePipeline = [
-        { $match: filter },
-        {
-          $addFields: {
-            filter: {
-              $and: [
-                { $lte: ["$nutrition.sugar", 15] },
-                {
-                  $or: [
-                    { $lte: ["$nutrition.cholesterol", cholesterolThreshold] },
-                    { $ne: [hasHypertension, true] },
-                    { $ne: [hasCardiovascularDisease, true] }
-                  ]
-                },
-                {
-                  $or: [
-                    { $lte: ["$nutrition.protein", 30] },
-                    { $ne: [hasKidneyProblems, true] }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        { $match: { filter: true } },
-      ];
-
-      const products = await Product.aggregate(aggregatePipeline);
-      
-      res.status(200).json({
-        success: true,
-        products
-      });
-    } else {
-      const products = await Product.find(filter);
+    query = { ...filter, ...nutritionalConditions };
+      const products = await Product.find(query);
 
       res.status(200).json({
         success: true,
         products
       });
-    }
+  
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-
 
 
 
