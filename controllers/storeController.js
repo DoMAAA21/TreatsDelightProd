@@ -388,7 +388,7 @@ cron.schedule('0 0 * * *', async () => {
 cron.schedule('0 0 * * *', async () => {
   try {
     const stores = await Store.find({
-      'permit.contract': {
+      'contract.expiration': {
         $gte: new Date(),
         $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       },
@@ -418,13 +418,13 @@ cron.schedule('0 0 * * *', async () => {
     const stores = await Store.find({
       $and: [
         {
-          'permit.contract': {
+          'contract.expiration': {
             $gte: new Date(),
             $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           },
         },
         {
-          'permit.contract': {
+          'contract.expiration': {
             $not: {
               $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             },
